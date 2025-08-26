@@ -1,0 +1,65 @@
+{
+  "name": "@openfiles-ai/sdk",
+  "version": "0.1.1",
+  "description": "OpenFiles SDK - AI-native file storage for your AI agents",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./core": "./dist/core/index.js",
+    "./openai": "./dist/openai/index.js",
+    "./tools": "./dist/tools/index.js"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prebuild": "node scripts/prebuild.js",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src/**/*.ts",
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run prebuild && npm run build"
+  },
+  "keywords": [
+    "openfiles",
+    "file-storage",
+    "ai",
+    "sdk",
+    "s3-style",
+    "version-control"
+  ],
+  "author": "OpenFiles",
+  "license": "MIT",
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.80.14",
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.17.0",
+    "@typescript-eslint/parser": "^8.17.0",
+    "dotenv": "^17.2.1",
+    "eslint": "^9.33.0",
+    "openai": "^5.12.2",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openfiles-ai/openfiles.git",
+    "directory": "sdks/typescript"
+  },
+  "homepage": "https://github.com/openfiles-ai/openfiles/tree/main/sdks/typescript",
+  "bugs": {
+    "url": "https://github.com/openfiles-ai/openfiles/issues"
+  },
+  "peerDependencies": {
+    "openai": "^5.12.2"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@openfiles-ai/python-sdk",
+  "private": true,
+  "scripts": {
+    "build": "poetry run python scripts/prebuild.py && poetry build",
+    "test": "poetry run pytest",
+    "lint": "poetry run ruff check . && poetry run black --check .",
+    "check-types": "poetry run mypy openfiles_ai",
+    "clean": "rm -rf dist build *.egg-info",
+    "publish": "echo 'Python package publishing handled separately via poetry'",
+    "publish:dry-run": "poetry publish --dry-run",
+    "publish:pypi": "poetry publish",
+    "dev": "echo 'Python SDK development - use poetry commands directly'"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18"
+  }
+}
