@@ -181,10 +181,19 @@ export class OpenFilesClient {
       throw new Error('Invalid API key format. API key must start with "oa_" and be at least 35 characters long')
     }
 
+    // Debug: Log what we're getting
+    const defaultUrl = 'https://api.openfiles.ai/functions/v1/api'
+    const envUrl = process.env.OPENFILES_BASE_URL
+    
     this.config = {
-      baseUrl: process.env.OPENFILES_BASE_URL || 'https://api.openfiles.com',
+      baseUrl: envUrl || defaultUrl,
       timeout: 30000,
       ...config
+    }
+    
+    // Extra debug check
+    if (this.config.baseUrl !== defaultUrl && this.config.baseUrl !== envUrl) {
+      logger.error(`WARNING: baseUrl was overridden to: ${this.config.baseUrl}`)
     }
 
     this.scopedBasePath = scopedBasePath
@@ -198,7 +207,11 @@ export class OpenFilesClient {
       }
     }))
 
-    logger.info(`API connected: ${this.config.baseUrl}${this.scopedBasePath ? ` (basePath: ${this.scopedBasePath})` : ''}`)
+    // Debug logging to track URL issues
+    if (!this.config.baseUrl || this.config.baseUrl === 'undefined') {
+      logger.error(`CRITICAL: baseUrl is ${this.config.baseUrl}`)
+    }
+    logger.info(`API connected: ${this.config.baseUrl || 'UNDEFINED'}${this.scopedBasePath ? ` (basePath: ${this.scopedBasePath})` : ''}`)
   }
 
   /**

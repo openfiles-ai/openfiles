@@ -1,2 +1,3 @@
 packages:
   - "sdks/*"
+  # Examples now use published packages, not workspace dependencies

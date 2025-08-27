@@ -39,7 +39,7 @@ logger = get_logger(__name__)
 class OpenFilesClient:
     """Direct API client for OpenFiles platform"""
 
-    DEFAULT_BASE_URL = "https://api.openfiles.com"
+    DEFAULT_BASE_URL = "https://api.openfiles.ai/functions/v1/api"
     DEFAULT_TIMEOUT = 30.0
 
     def __init__(
@@ -224,7 +224,7 @@ class OpenFilesClient:
 
         try:
             response = await self._client.put(
-                f"/files/{resolved_path}", json=request.model_dump(by_alias=True, mode="json")
+                f"/files/edit/{resolved_path}", json=request.model_dump(by_alias=True, mode="json")
             )
             await self._handle_response_errors(response, "edit_file", resolved_path)
 
@@ -291,8 +291,8 @@ class OpenFilesClient:
         request = AppendFileRequest(content=content)
 
         try:
-            response = await self._client.patch(
-                f"/files/{resolved_path}/append",
+            response = await self._client.put(
+                f"/files/append/{resolved_path}",
                 json=request.model_dump(by_alias=True, mode="json"),
             )
             await self._handle_response_errors(response, "append_file", resolved_path)
@@ -327,8 +327,8 @@ class OpenFilesClient:
         request = OverwriteFileRequest(content=content, isBase64=is_base64)
 
         try:
-            response = await self._client.patch(
-                f"/files/{resolved_path}/overwrite",
+            response = await self._client.put(
+                f"/files/overwrite/{resolved_path}",
                 json=request.model_dump(by_alias=True, mode="json"),
             )
             await self._handle_response_errors(response, "overwrite_file", resolved_path)

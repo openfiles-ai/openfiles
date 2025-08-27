@@ -159,7 +159,7 @@ class OpenAI(OriginalOpenAI):
         # Initialize OpenFiles components
         self.artifacts = OpenFilesClient(
             api_key=openfiles_api_key,
-            base_url=openfiles_base_url or "https://api.openfiles.com",
+            base_url=openfiles_base_url,
             base_path=base_path,
         )
         self.tools_instance = OpenFilesTools(self.artifacts)

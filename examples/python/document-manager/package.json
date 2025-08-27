@@ -1,0 +1,20 @@
+{
+  "name": "@openfiles-ai/example-python-document-manager",
+  "version": "0.1.0",
+  "description": "Python example demonstrating document management using all three OpenFiles SDK approaches",
+  "type": "commonjs",
+  "scripts": {
+    "install": "poetry install",
+    "core-example": "poetry run python src/core_example.py",
+    "tools-example": "poetry run python src/tools_example.py",
+    "openai-example": "poetry run python src/openai_example.py",
+    "all": "npm run core-example && echo && npm run tools-example && echo && npm run openai-example",
+    "test": "npm run all",
+    "type-check": "poetry run mypy src/",
+    "lint": "poetry run ruff check src/",
+    "format": "poetry run ruff format src/"
+  },
+  "keywords": ["openfiles", "example", "document-management", "python", "sdk"],
+  "author": "OpenFiles",
+  "license": "MIT"
+}

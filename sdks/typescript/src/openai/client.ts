@@ -103,11 +103,12 @@ export class OpenAI extends OriginalOpenAI {
     super(openAIConfig)
 
     this.config = config
-    this.artifacts = new OpenFilesClient({
+    const clientConfig: any = {
       apiKey: openFilesApiKey,
-      baseUrl: openFilesBaseUrl || process.env.OPENFILES_BASE_URL || 'https://api.openfiles.com',
-      basePath: basePath
-    })
+      ...(openFilesBaseUrl && { baseUrl: openFilesBaseUrl }),
+      ...(basePath && { basePath: basePath })
+    }
+    this.artifacts = new OpenFilesClient(clientConfig)
     this.toolsInstance = new OpenFilesTools(this.artifacts)
     
     logger.info(`OpenAI client initialized with file operations${basePath ? ` (basePath: ${basePath})` : ''}`)

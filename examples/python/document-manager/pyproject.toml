@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "python-document-manager"
+version = "0.1.0"
+description = "Python example demonstrating document management using OpenFiles SDK"
+authors = ["OpenFiles"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.9"
+openfiles-ai = "^0.1.2"
+openai = "^1.101.0"
+python-dotenv = "^1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+mypy = "^1.0.0"
+ruff = "^0.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+select = ["E", "F", "UP", "B", "SIM", "I"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true

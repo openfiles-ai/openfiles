@@ -1,6 +1,6 @@
 {
   "name": "@openfiles-ai/sdk",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "OpenFiles SDK - AI-native file storage for your AI agents",
   "type": "module",
   "main": "dist/index.js",
@@ -15,7 +15,7 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "npm run prebuild && tsc",
     "dev": "tsc --watch",
     "prebuild": "node scripts/prebuild.js",
     "test": "vitest run",
@@ -24,7 +24,8 @@
     "lint": "eslint src/**/*.ts",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "prepublishOnly": "npm run prebuild && npm run build"
+    "publish": "npm publish",
+    "publish:dry-run": "npm publish --dry-run"
   },
   "keywords": [
     "openfiles",

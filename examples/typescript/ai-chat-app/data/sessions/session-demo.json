@@ -1,0 +1,44 @@
+{
+  "id": "demo",
+  "name": "openfiles-demo",
+  "messages": [
+    {
+      "id": "81e04a4e-f841-430e-85b0-4997e48d523b",
+      "role": "user",
+      "content": "hello",
+      "timestamp": "2025-08-20T18:41:33.446Z"
+    },
+    {
+      "id": "47645e15-070a-49a6-b8b1-d88fbd031b5e",
+      "role": "assistant",
+      "content": "Hello! How can I assist you today?",
+      "timestamp": "2025-08-20T18:41:34.630Z"
+    },
+    {
+      "id": "c26a9ddb-9b65-49f8-9c6d-19d060dd323b",
+      "role": "user",
+      "content": "give me a poem about beach and the waves",
+      "timestamp": "2025-08-20T18:42:40.886Z"
+    },
+    {
+      "id": "3d46df72-8443-4503-9baa-e149448937dd",
+      "role": "assistant",
+      "content": "Here's a poem about the beach and the waves:\n\n---\n\n**Whispers of the Waves**\n\nUpon the shore where dreams take flight,  \nThe golden sands embrace the light.  \nWaves come dancing, a rhythmic grace,  \nWith whispers of the ocean's face.\n\nThey rise and fall, a lullaby,  \nA serenade beneath the sky.  \nEach crest a story, each trough a sigh,  \nIn their embrace, time slips by.\n\nFootprints linger, then wash away,  \nAs tides weave memories in the spray.  \nThe sun dips low, in hues of orange,  \nWhile waves keep secrets in their forage.\n\nSeagulls cry, they soar and glide,  \nOver the waters, vast and wide.  \nWith every wave, a promise sways,  \nIn the heart of the beach, where the spirit plays.\n\nSo let us wander, hand in hand,  \nAlong the shore, where dreams are planned.  \nFor in the waves, life's essence flows,  \nA timeless dance, where love only grows.\n\n--- \n\nI hope you enjoyed it! If you need anything else, feel free to ask.",
+      "timestamp": "2025-08-20T18:42:46.461Z"
+    },
+    {
+      "id": "9f95e46b-61a2-4b44-8326-9dad83fc9313",
+      "role": "user",
+      "content": "write it to a file",
+      "timestamp": "2025-08-20T18:42:57.105Z"
+    },
+    {
+      "id": "92189b64-9ab0-4a9a-aa24-a984e1f8a177",
+      "role": "assistant",
+      "content": "The poem has been successfully written to a file named **beach_poem.txt**. If you would like to see its content or perform any other actions, just let me know!",
+      "timestamp": "2025-08-20T18:43:05.211Z"
+    }
+  ],
+  "createdAt": "2025-08-20T18:41:29.697Z",
+  "updatedAt": "2025-08-20T18:43:05.213Z"
+}

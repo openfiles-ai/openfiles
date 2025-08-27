@@ -1,0 +1,32 @@
+{
+  "name": "@openfiles-ai/example-document-manager",
+  "version": "0.1.1",
+  "description": "Simple example demonstrating document management using all three OpenFiles SDK approaches",
+  "type": "module",
+  "scripts": {
+    "core-example": "tsx src/core-example.ts",
+    "tools-example": "tsx src/tools-example.ts",
+    "openai-example": "tsx src/openai-example.ts",
+    "all": "npm run core-example && echo && npm run tools-example && echo && npm run openai-example",
+    "test": "npm run all",
+    "type-check": "tsc --noEmit --skipLibCheck"
+  },
+  "dependencies": {
+    "@openfiles-ai/sdk": "^0.1.3",
+    "dotenv": "^16.3.1",
+    "openai": "^5.12.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  },
+  "keywords": [
+    "openfiles",
+    "example",
+    "document-management",
+    "sdk"
+  ],
+  "author": "OpenFiles",
+  "license": "MIT"
+}

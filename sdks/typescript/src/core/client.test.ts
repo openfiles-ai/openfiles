@@ -60,7 +60,7 @@ describe('OpenFilesClient', () => {
       const client = new OpenFilesClient({
         apiKey: 'oa_test123456789012345678901234567890'
       })
-      expect((client as any).config.baseUrl).toBe('https://api.openfiles.com')
+      expect((client as any).config.baseUrl).toBe('https://api.openfiles.ai/functions/v1/api')
     })
 
     it('should use custom base URL', () => {

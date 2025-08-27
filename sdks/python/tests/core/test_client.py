@@ -39,7 +39,7 @@ class TestOpenFilesClientConstructor:
     def test_use_default_base_url(self, valid_api_key):
         """Should use default base URL"""
         client = OpenFilesClient(api_key=valid_api_key)
-        assert client.base_url == "https://api.openfiles.com"
+        assert client.base_url == "https://api.openfiles.ai/functions/v1/api"
     
     def test_use_custom_base_url(self, valid_api_key):
         """Should use custom base URL"""
