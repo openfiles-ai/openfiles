@@ -265,7 +265,7 @@ class TestOpenFilesClientEditFile:
             mock_httpx_client.put.assert_called_once()
             
             call_args = mock_httpx_client.put.call_args
-            assert call_args[0][0] == "/files/test.txt"
+            assert call_args[0][0] == "/files/edit/test.txt"
             request_json = call_args[1]["json"]
             assert request_json["oldString"] == "Hello"
             assert request_json["newString"] == "Hi"
@@ -362,7 +362,7 @@ class TestOpenFilesClientAppendFile:
     ):
         """Should append content to existing file"""
         with patch('httpx.AsyncClient', return_value=mock_httpx_client):
-            mock_httpx_client.patch.return_value.json.return_value = {
+            mock_httpx_client.put.return_value.json.return_value = {
                 "success": True,
                 "data": sample_file_metadata
             }
@@ -375,8 +375,8 @@ class TestOpenFilesClientAppendFile:
             
             assert result.path == "test.txt"
             
-            call_args = mock_httpx_client.patch.call_args
-            assert call_args[0][0] == "/files/log.txt/append"
+            call_args = mock_httpx_client.put.call_args
+            assert call_args[0][0] == "/files/append/log.txt"
             request_json = call_args[1]["json"]
             assert request_json["content"] == "\nNew log entry"
 
@@ -393,7 +393,7 @@ class TestOpenFilesClientOverwriteFile:
     ):
         """Should overwrite entire file content"""
         with patch('httpx.AsyncClient', return_value=mock_httpx_client):
-            mock_httpx_client.patch.return_value.json.return_value = {
+            mock_httpx_client.put.return_value.json.return_value = {
                 "success": True,
                 "data": sample_file_metadata
             }
@@ -406,8 +406,8 @@ class TestOpenFilesClientOverwriteFile:
             
             assert result.path == "test.txt"
             
-            call_args = mock_httpx_client.patch.call_args
-            assert call_args[0][0] == "/files/config.json/overwrite"
+            call_args = mock_httpx_client.put.call_args
+            assert call_args[0][0] == "/files/overwrite/config.json"
             request_json = call_args[1]["json"]
             assert request_json["content"] == '{"new": "config"}'
             assert request_json["isBase64"] is False

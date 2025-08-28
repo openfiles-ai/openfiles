@@ -43,6 +43,7 @@ async def core_integration_example() -> None:
     # Initialize client with session-specific basePath for organized file structure
     client = OpenFilesClient(
         api_key=os.getenv('OPENFILES_API_KEY'),
+        base_url=os.getenv('OPENFILES_BASE_URL'),  # Use local dev server if specified
         base_path=session_paths['business_app']  # All files will be under this session path
     )
 
@@ -176,10 +177,12 @@ Report generated automatically"""
 
         # 4. List files in organized directories
         print('📁 Exploring organized file structure...')
-        all_files = await client.list_files(limit=20)  # Lists all under demo/business-app/
-        report_files = await reports_client.list_files(directory='/', limit=10)  # Lists demo/business-app/reports/
-        config_files = await config_client.list_files(directory='/', limit=10)  # Lists demo/business-app/config/
-        operations['listed'] += 3
+        all_files = await client.list_files(directory="", limit=20)  # Lists all under demo/business-app/
+        report_files = await reports_client.list_files(directory="", limit=10)  # Lists demo/business-app/reports/
+        config_files = await config_client.list_files(directory="", limit=10)  # Lists demo/business-app/config/
+        data_files = await data_client.list_files(directory="", limit=10)  # Lists demo/business-app/data/
+        log_files = await logs_client.list_files(directory="", limit=10)  # Lists demo/business-app/logs/
+        operations['listed'] += 5
         print('✅ Organized file structure explored')
 
         # 5. File monitoring and metadata with scoped clients
@@ -193,7 +196,8 @@ Report generated automatically"""
         print('✅ Core Integration Complete')
         print(f"📊 Operations: {operations['created']} created, {operations['read']} read, {operations['edited']} edited, {operations['listed']} listed")
         print(f"⏱️  Duration: {duration:.0f}ms")
-        print(f"📁 Files: {len(all_files.data.files or [])} total, {len(report_files.data.files or [])} reports, {len(config_files.data.files or [])} config")
+        total_files = len(all_files.data.files or []) + len(report_files.data.files or []) + len(config_files.data.files or []) + len(data_files.data.files or []) + len(log_files.data.files or [])
+        print(f"📁 Files: {total_files} total ({len(report_files.data.files or [])} reports, {len(config_files.data.files or [])} config, {len(data_files.data.files or [])} data, {len(log_files.data.files or [])} logs)")
         print(f"📋 Sales data: {sales_lines} records")
         print(f"🔧 Config: v{config_metadata.version}, {format_file_size(config_metadata.size or 0)}")
         print(f"📚 Versions tracked: {len(config_versions.versions)}")

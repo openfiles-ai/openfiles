@@ -38,6 +38,7 @@ async def tools_integration_example() -> None:
     # Initialize client and tools with session-specific organized structure
     client = OpenFilesClient(
         api_key=os.getenv('OPENFILES_API_KEY'),
+        base_url=os.getenv('OPENFILES_BASE_URL'),  # Use local dev server if specified
         base_path=session_paths['tools_test']  # All AI-generated files organized under session
     )
 

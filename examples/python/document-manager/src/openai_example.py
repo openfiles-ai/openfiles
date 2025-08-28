@@ -37,6 +37,7 @@ async def openai_integration_example() -> None:
     # Step 3: Initialize OpenAI wrapper with session-specific organized structure
     ai = OpenAI(
         openfiles_api_key=os.getenv('OPENFILES_API_KEY'),
+        openfiles_base_url=os.getenv('OPENFILES_BASE_URL'),  # Use local dev server if specified
         api_key=os.getenv('OPENAI_API_KEY'),
         base_path=session_paths['ai_generated']  # Organize all AI files under session
     )
@@ -59,7 +60,7 @@ async def openai_integration_example() -> None:
             }],
             temperature=0.3
         )
-        print('✅ Sales report created at ai-generated/business-docs/reports/january-2024-sales.md')
+        print('✅ Sales report created at ai-generated/reports/january-2024-sales.md')
 
         print('⚙️  Setting up configuration with AI...')
         
@@ -73,7 +74,7 @@ async def openai_integration_example() -> None:
             }],
             temperature=0.2
         )
-        print('✅ Configuration created at ai-generated/business-docs/config/app-config.json')
+        print('✅ Configuration created at ai-generated/config/app-config.json')
 
         print('📈 Generating analytics data with AI...')
         
@@ -87,14 +88,14 @@ async def openai_integration_example() -> None:
             }],
             temperature=0.3
         )
-        print('✅ Analytics data generated at ai-generated/business-docs/analytics/user-metrics.csv')
+        print('✅ Analytics data generated at ai-generated/analytics/user-metrics.csv')
 
         print('🔍 Checking created files with AI...')
-        list_response = await ai.chat.completions.create(
+        list_response = await reports_ai.chat.completions.create(
             model=model,
             messages=[{
-                'role': 'user',
-                'content': 'List all the files we have created and provide a brief summary of each file\'s purpose and size.'
+                'role': 'user', 
+                'content': 'List all files in the current directory.'
             }]
         )
         response_content = list_response.choices[0].message.content if list_response.choices else 'No response'
