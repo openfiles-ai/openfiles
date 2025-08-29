@@ -1,0 +1,151 @@
+---
+title: 'Quickstart'
+description: 'Get file operations working with your AI agent in 2 minutes.'
+---
+
+## Prerequisites
+
+- OpenAI API key
+- Node.js 18+ or Python 3.8+
+
+## 1. Get API Key
+
+1. Sign in to [console.openfiles.ai](https://console.openfiles.ai) with GitHub
+2. Go to API Keys Tab
+3. Click "Create API Key"  
+4. Copy the key (starts with `oa_`)
+
+## 2. Install SDK
+
+<Tabs>
+  <Tab title="npm">
+    ```bash
+    npm install @openfiles/sdk
+    ```
+  </Tab>
+  <Tab title="yarn">
+    ```bash
+    yarn add @openfiles/sdk
+    ```
+  </Tab>
+  <Tab title="pnpm">
+    ```bash
+    pnpm add @openfiles/sdk
+    ```
+  </Tab>
+  <Tab title="pip">
+    ```bash
+    pip install openfiles
+    ```
+  </Tab>
+</Tabs>
+
+## 3. Set Environment Variables
+
+```bash
+export OPENAI_API_KEY="sk_your_openai_key"
+export OPENFILES_API_KEY="oa_your_openfiles_key"
+```
+
+## 4. Update Your Code
+
+Replace your OpenAI import and add the OpenFiles API key:
+
+<CodeGroup>
+```typescript TypeScript
+import OpenAI from '@openfiles/sdk/openai'  // Changed from 'openai'
+
+const ai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  openFilesApiKey: process.env.OPENFILES_API_KEY  // Add this line
+})
+
+const response = await ai.chat.completions.create({
+  model: 'gpt-4',
+  messages: [{
+    role: 'user',
+    content: 'Create a shopping list for making chocolate chip cookies and save it as shopping-list.md'
+  }]
+})
+
+console.log(response.choices[0].message.content)
+```
+
+```python Python
+from openfiles import OpenAI  # Changed from 'openai'
+import asyncio
+import os
+
+async def main():
+    ai = OpenAI(
+        api_key=os.getenv('OPENAI_API_KEY'),
+        openfiles_api_key=os.getenv('OPENFILES_API_KEY')  # Add this line
+    )
+
+    response = await ai.chat.completions.create(
+        model='gpt-4',
+        messages=[{
+            'role': 'user',
+            'content': 'Create a shopping list for making chocolate chip cookies and save it as shopping-list.md'
+        }]
+    )
+    
+    print(response.choices[0].message.content)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+</CodeGroup>
+
+## 5. Run Your Code
+
+Your AI can now create, read, and edit files automatically. The agent will use file operations when it determines they're needed based on the user's request.
+
+## Verify It Works
+
+Try these prompts to test file operations:
+
+```typescript
+// Create a file
+"Create a shopping list for making chocolate chip cookies and save it as shopping-list.md"
+
+// Read a file  
+"Read the shopping-list.md file and tell me what's in it"
+
+// Edit a file
+"Add butter and vanilla extract to my shopping list"
+
+// List files
+"Show me all the files I've created"
+```
+
+## What Just Happened?
+
+1. OpenFiles injected 7 file operation tools into your AI
+2. The AI chose which tools to use based on your requests
+3. Files are stored with automatic versioning
+4. Your existing code works exactly the same way
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Choose Integration" icon="code" href="/getting-started/choose-your-path">
+    Explore other integration options
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference/authentication">
+    Learn about the REST API
+  </Card>
+</CardGroup>
+
+## Environment Variables
+
+For production, set these environment variables:
+
+```bash
+OPENAI_API_KEY=sk_...
+OPENFILES_API_KEY=oa_...
+```
+
+<Note>
+Never commit API keys to version control. Use environment variables or a secure secrets manager.
+</Note>

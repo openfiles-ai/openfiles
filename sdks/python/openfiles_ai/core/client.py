@@ -235,13 +235,14 @@ class OpenFilesClient:
             raise NetworkError(f"Network error during edit_file: {str(e)}") from e
 
     async def list_files(
-        self, directory: str = "", limit: int = 10, offset: int = 0, base_path: Optional[str] = None
+        self, directory: str = "", recursive: bool = False, limit: int = 10, offset: int = 0, base_path: Optional[str] = None
     ) -> FileListResponse:
         """
         List files in directory
 
         Args:
             directory: Directory path to list files from
+            recursive: If True, lists all files across all directories. If False (default), only lists files in the specified directory
             limit: Maximum number of files to return
             offset: Number of files to skip
             base_path: Base path prefix for this operation
@@ -256,7 +257,7 @@ class OpenFilesClient:
         if not resolved_dir:
             resolved_dir = ""
 
-        params = {"directory": resolved_dir, "limit": str(limit), "offset": str(offset)}
+        params = {"directory": resolved_dir, "recursive": str(recursive).lower(), "limit": str(limit), "offset": str(offset)}
 
         try:
             response = await self._client.get("/files", params=params)

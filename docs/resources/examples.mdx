@@ -1,0 +1,193 @@
+---
+title: 'Examples'
+description: 'Learn by example'
+---
+
+## GitHub Repository
+
+All our examples are available in our GitHub repository:
+
+<Card title="OpenFiles Examples" icon="github" href="https://github.com/openfiles-ai/openfiles/tree/main/examples">
+  **github.com/openfiles-ai/openfiles/tree/main/examples**
+  
+  Complete, runnable projects you can clone and modify
+</Card>
+
+## Quick Start Examples
+
+### Create a README Generator
+
+<CodeGroup>
+```typescript TypeScript
+import OpenAI from '@openfiles/sdk/openai'
+
+const ai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  openFilesApiKey: process.env.OPENFILES_API_KEY,
+  basePath: 'projects'
+})
+
+async function generateReadme(projectName: string, description: string) {
+  const response = await ai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [{
+      role: 'user',
+      content: `Create a comprehensive README.md for a project called "${projectName}". 
+                Description: ${description}`
+    }]
+  })
+  
+  return response.choices[0].message.content
+}
+
+// Usage
+const result = await generateReadme(
+  'OpenFiles SDK',
+  'File storage for AI agents'
+)
+console.log(result)
+```
+
+```python Python
+from openfiles import OpenAI
+import os
+
+ai = OpenAI(
+    api_key=os.getenv('OPENAI_API_KEY'),
+    openfiles_api_key=os.getenv('OPENFILES_API_KEY'),
+    base_path='projects'
+)
+
+async def generate_readme(project_name: str, description: str):
+    response = await ai.chat.completions.create(
+        model='gpt-4',
+        messages=[{
+            'role': 'user',
+            'content': f'''Create a comprehensive README.md for a project called "{project_name}". 
+                          Description: {description}'''
+        }]
+    )
+    
+    return response.choices[0].message.content
+
+# Usage
+result = await generate_readme(
+    'OpenFiles SDK',
+    'File storage for AI agents'
+)
+print(result)
+```
+</CodeGroup>
+
+### Core Client Usage
+
+<CodeGroup>
+```typescript TypeScript
+import { OpenFilesClient } from '@openfiles/sdk/core'
+
+const client = new OpenFilesClient({ 
+  apiKey: process.env.OPENFILES_API_KEY 
+})
+
+// Create specifications file
+await client.writeFile({
+  path: 'design/todo-app-specs.md',
+  content: 'UI specifications for todo application...'
+})
+
+// Read specifications
+const specs = await client.readFile({
+  path: 'design/todo-app-specs.md'
+})
+
+// Implement based on specs
+await client.writeFile({
+  path: 'code/todo-app.js',
+  content: generateTodoAppCode(specs.content)
+})
+
+// Create review document
+await client.writeFile({
+  path: 'reviews/todo-app-review.md',
+  content: 'Code review findings...'
+})
+```
+
+```python Python
+from openfiles import OpenFilesClient
+
+client = OpenFilesClient(
+    api_key=os.getenv('OPENFILES_API_KEY')
+)
+
+# Create specifications file
+await client.write_file(
+    path='design/todo-app-specs.md',
+    content='UI specifications for todo application...'
+)
+
+# Read specifications
+specs = await client.read_file(
+    path='design/todo-app-specs.md'
+)
+
+# Implement based on specs
+await client.write_file(
+    path='code/todo-app.js',
+    content=generate_todo_app_code(specs['content'])
+)
+
+# Create review document
+await client.write_file(
+    path='reviews/todo-app-review.md',
+    content='Code review findings...'
+)
+```
+</CodeGroup>
+
+## Running the Examples
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/openfiles-ai/openfiles.git
+   cd examples
+   ```
+
+2. **Choose an example**
+   ```bash
+   cd typescript/openai-chat-app
+   ```
+
+3. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+4. **Set environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your API keys
+   ```
+
+5. **Run the example**
+   ```bash
+   npm run dev
+   ```
+
+## Contributing Examples
+
+1. Fork the [examples repository](https://github.com/openfiles-ai/openfiles)
+2. Create your example in the appropriate language folder
+3. Include a README with setup instructions
+4. Submit a pull request
+
+## Get Help
+
+<CardGroup cols={2}>
+  <Card title="Discord" icon="discord" href="https://discord.gg/openfiles">
+    Ask questions in our community
+  </Card>
+  <Card title="GitHub Issues" icon="github" href="https://github.com/openfiles-ai/openfiles/issues">
+    Report issues with examples
+  </Card>
+</CardGroup>

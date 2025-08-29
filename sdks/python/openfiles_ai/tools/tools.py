@@ -247,6 +247,11 @@ class OpenFilesTools:
                             "example": "reports/",
                             "default": "/",
                         },
+                        "recursive": {
+                            "type": "boolean",
+                            "description": "If true, lists all files across all directories. If false (default), only lists files in the specified directory",
+                            "default": False,
+                        },
                         "limit": {
                             "type": "number",
                             "description": "Maximum number of files to return",
@@ -501,7 +506,10 @@ class OpenFilesTools:
 
         elif tool_call.function["name"] == "list_files":
             return await self.client.list_files(
-                directory=args["directory"], limit=args["limit"], base_path=self.base_path
+                directory=args["directory"], 
+                recursive=args.get("recursive", False),
+                limit=args["limit"], 
+                base_path=self.base_path
             )
 
         elif tool_call.function["name"] == "append_to_file":

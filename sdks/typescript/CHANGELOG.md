@@ -1,5 +1,11 @@
 # @openfiles-ai/sdk
 
+## 0.1.4
+
+### Patch Changes
+
+- recursive param support added
+
 ## 0.1.3
 
 ### Patch Changes

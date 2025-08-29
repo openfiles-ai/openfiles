@@ -1,0 +1,145 @@
+---
+title: 'Choose Your Integration'
+description: 'Select the integration method that matches your current setup and requirements.'
+---
+
+## Decision Matrix
+
+| Your Setup | Choose This | Setup Time |
+|------------|-------------|------------|
+| Using OpenAI SDK | **OpenAI Integration** | 2 minutes |
+| Using AI frameworks (OpenAI, Claude, Gemini) | **Tools** | 5 minutes |
+| No AI framework | **Core Client** | 5 minutes |
+| Custom backend | **REST API** | 5 minutes |
+
+## Integration Options
+
+### OpenAI Integration
+
+**When to use**: You're already using the OpenAI SDK
+
+<CodeGroup>
+```typescript TypeScript
+import OpenAI from '@openfiles/sdk/openai'  // Change this line
+
+const ai = new OpenAI({
+  apiKey: 'sk-...',
+  openFilesApiKey: 'oa-...'  // Add this line
+})
+// Everything else stays the same
+```
+
+```python Python
+from openfiles import OpenAI  # Change this line
+
+ai = OpenAI(
+    api_key='sk-...',
+    openfiles_api_key='oa-...'  # Add this line  
+)
+# Everything else stays the same
+```
+</CodeGroup>
+
+- ✅ Minimal code changes
+- ✅ Automatic file operations
+- ✅ Works with existing OpenAI code
+- ❌ Currently limited to OpenAI models
+
+[OpenAI Integration Guide →](/guides/openai-integration)
+
+### Tools
+
+**When to use**: You're using other AI providers or multiple frameworks
+
+<CodeGroup>
+```typescript TypeScript
+import { createOpenFilesTools } from '@openfiles/sdk/tools'
+
+const tools = createOpenFilesTools({ apiKey: 'oa-...' })
+
+// Use with any AI provider
+const response = await anthropic.messages.create({
+  model: 'claude-3-sonnet',
+  messages: [...],
+  tools: tools.definitions
+})
+
+// Process file operations
+await tools.handleToolCalls(response.tool_calls)
+```
+
+```python Python
+from openfiles.tools import create_openfiles_tools
+
+tools = create_openfiles_tools(api_key='oa-...')
+
+# Use with any AI provider
+response = client.messages.create(
+    model='claude-3-sonnet',
+    messages=[...],
+    tools=tools.definitions
+)
+
+# Process file operations
+await tools.handle_tool_calls(response.tool_calls)
+```
+</CodeGroup>
+
+- ✅ Works with any AI provider
+- ✅ Standard tool format
+- ✅ Mix with your custom tools
+- ❌ Requires manual tool handling
+
+[Tools Integration Guide →](/guides/tools-integration)
+
+
+### Core SDK & REST API
+
+**When to use**: You need direct control or don't use AI frameworks
+
+<CodeGroup>
+```typescript TypeScript
+import { OpenFilesClient } from '@openfiles/sdk/core'
+
+const client = new OpenFilesClient({ apiKey: 'oa-...' })
+
+// Direct file operations
+await client.writeFile({ path: 'report.md', content: 'Hello' })
+const content = await client.readFile({ path: 'report.md' })
+```
+
+```python Python
+from openfiles import OpenFilesClient
+
+client = OpenFilesClient(api_key='oa-...')
+
+# Direct file operations  
+await client.write_file(path='report.md', content='Hello')
+content = await client.read_file(path='report.md')
+```
+</CodeGroup>
+
+- ✅ No AI framework required
+- ✅ Full control over operations
+- ✅ Can integrate anywhere
+- ❌ No automatic AI integration
+
+**REST API Example:**
+```bash
+# Create a file
+curl -X POST https://api.openfiles.com/files \
+  -H "Authorization: Bearer oa_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"path": "report.md", "content": "Hello World"}'
+
+# Read a file
+curl https://api.openfiles.com/files/report.md \
+  -H "Authorization: Bearer oa_your_key"
+```
+
+[Core Client Guide →](/guides/core-client) | [API Reference →](/api-reference)
+
+
+## Next Steps
+
+Still unsure? Start with the [Quickstart](/getting-started/quickstart) using OpenAI Integration if you're using OpenAI, or the Core Client for other frameworks.

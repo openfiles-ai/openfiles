@@ -212,6 +212,11 @@ export class OpenFilesTools {
                 example: 'reports/',
                 default: '/'
               },
+              recursive: {
+                type: 'boolean',
+                description: 'If true, lists all files across all directories. If false (default), only lists files in the specified directory',
+                default: false
+              },
               limit: {
                 type: 'number',
                 description: 'Maximum number of files to return',
@@ -467,6 +472,7 @@ export class OpenFilesTools {
       case 'list_files':
         return await this.client.listFiles({
           directory: args.directory,
+          recursive: args.recursive,
           limit: args.limit
         })
 

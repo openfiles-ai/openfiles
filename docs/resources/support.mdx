@@ -1,0 +1,191 @@
+---
+title: 'Support'
+description: 'Get help with OpenFiles integration and file operations.'
+---
+
+## Getting Help
+
+<CardGroup cols={2}>
+  <Card title="GitHub Issues" icon="github" href="https://github.com/openfiles-ai/openfiles/issues">
+    Report bugs and request features
+  </Card>
+  <Card title="Email Support" icon="envelope" href="mailto:support@openfiles.ai">
+    Contact our support team
+  </Card>
+</CardGroup>
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="API Key Issues">
+    **Invalid API Key Error**
+    - Ensure your key starts with `oa_`
+    - Check for extra spaces or newlines
+    - Verify the key in your [console](https://console.openfiles.ai)
+    
+    **Rate Limiting**
+    - Free tier: 100 requests/minute
+    - Check your usage in the console
+    - Consider upgrading for higher limits
+  </Accordion>
+  
+  <Accordion title="File Operations Not Working">
+    **AI Not Creating Files**
+    - Verify your OpenFiles API key is set
+    - Check that file operations are enabled
+    - Ensure your prompt clearly requests file creation
+    
+    **File Not Found Errors**
+    - Remember: no leading slashes in paths
+    - Use forward slashes even on Windows
+    - Check file exists with `list` operation first
+  </Accordion>
+  
+  <Accordion title="SDK Installation Issues">
+    **TypeScript/JavaScript**
+    ```bash
+    # Clear npm cache
+    npm cache clean --force
+    
+    # Reinstall
+    npm install @openfiles/sdk
+    ```
+    
+    **Python**
+    ```bash
+    # Upgrade pip
+    pip install --upgrade pip
+    
+    # Reinstall
+    pip install --force-reinstall openfiles
+    ```
+  </Accordion>
+  
+  <Accordion title="Integration Problems">
+    **OpenAI Integration**
+    - Ensure you're importing from `@openfiles/sdk/openai`
+    - Both OpenAI and OpenFiles API keys must be valid
+    - Check you're using a supported OpenAI model
+    
+    **Core Client**
+    - Verify API key is correctly formatted
+    - Check HTTP status codes in error responses
+    - Ensure proper async/await usage in Python
+  </Accordion>
+</AccordionGroup>
+
+## Debugging Tips
+
+### Enable Debug Logging
+
+<CodeGroup>
+```typescript TypeScript
+// Set environment variable
+process.env.OPENFILES_DEBUG = 'true'
+
+// Or in code
+const ai = new OpenAI({
+  apiKey: 'sk-...',
+  openFilesApiKey: 'oa-...',
+  debug: true
+})
+```
+
+```python Python
+# Set environment variable
+os.environ['OPENFILES_DEBUG'] = 'true'
+
+# Or in code
+ai = OpenAI(
+    api_key='sk-...',
+    openfiles_api_key='oa-...',
+    debug=True
+)
+```
+</CodeGroup>
+
+### Check API Status
+
+Visit [status.openfiles.ai](https://status.openfiles.ai) to check service status.
+
+### Test Your Connection
+
+<CodeGroup>
+```typescript TypeScript
+import { OpenFilesClient } from '@openfiles/sdk/core'
+
+const client = new OpenFilesClient({ 
+  apiKey: 'oa-...' 
+})
+
+// Test connection
+try {
+  const files = await client.listFiles()
+  console.log('Connection successful!')
+} catch (error) {
+  console.error('Connection failed:', error)
+}
+```
+
+```python Python
+from openfiles import OpenFilesClient
+
+client = OpenFilesClient(api_key='oa-...')
+
+# Test connection
+try:
+    files = await client.list_files()
+    print('Connection successful!')
+except Exception as error:
+    print(f'Connection failed: {error}')
+```
+</CodeGroup>
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="What AI providers are supported?">
+    Currently:
+    - ✅ OpenAI (native drop-in)
+    - ✅ Any AI via Core Client
+    
+    Coming soon:
+    - 🔜 Anthropic Claude (native)
+    - 🔜 Google Gemini (native)
+    - 🔜 Cohere (native)
+  </Accordion>
+  
+  <Accordion title="Can I use OpenFiles without AI?">
+    Yes! Use the Core Client for direct file operations without any AI dependencies.
+  </Accordion>
+  
+  <Accordion title="What file types are supported?">
+    - **Text files** - Full support in all SDKs
+    - **Binary files** - Supported in Core Client only (coming to other layers)
+  </Accordion>
+  
+  <Accordion title="Is there a file size limit?">
+    - Free tier: 10MB per file
+    - Pro tier: 100MB per file
+    - Enterprise: Custom limits
+  </Accordion>
+  
+  <Accordion title="How does versioning work?">
+    Every write operation creates a new version automatically. You can access any previous version using the version number.
+  </Accordion>
+</AccordionGroup>
+
+## Contact Information
+
+- **Email**: contact@openfiles.ai
+- **GitHub**: [github.com/openfiles-ai/openfiles](https://github.com/openfiles-ai/openfiles)
+
+## Enterprise Inquiry
+
+For enterprise usage questions and custom implementations:
+
+<Card title="Contact Sales" icon="building" href="mailto:contact@openfiles.ai">
+  **contact@openfiles.ai**
+  
+  Discuss enterprise usage, custom integrations, and volume pricing
+</Card>

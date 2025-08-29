@@ -61,7 +61,8 @@ export const regenerateApiKey = <ThrowOnError extends boolean = false>(options?:
 };
 
 /**
- * List files
+ * List files in a directory
+ * List files in a specific directory. When called on the root directory ('/'), this only returns files in the root directory and excludes files in subdirectories. To see all files across all directories, use `?recursive=true` parameter.
  */
 export const listFiles = <ThrowOnError extends boolean = false>(options?: Options<ListFilesData, ThrowOnError>) => {
     return (options?.client ?? _heyApiClient).get<ListFilesResponses, ListFilesErrors, ThrowOnError>({

@@ -1,0 +1,134 @@
+---
+title: 'SDK Reference'
+description: 'Technical documentation for OpenFiles SDKs.'
+---
+
+## Import Paths
+
+### TypeScript/JavaScript
+```typescript
+// OpenAI integration
+import OpenAI from '@openfiles/sdk/openai'
+
+// Tools integration
+import { createOpenFilesTools } from '@openfiles/sdk/tools'
+
+// Core client
+import { OpenFilesClient } from '@openfiles/sdk/core'
+```
+
+### Python
+```python
+# OpenAI integration
+from openfiles import OpenAI
+
+# Tools integration
+from openfiles.tools import create_openfiles_tools
+
+# Core client
+from openfiles import OpenFilesClient
+```
+
+
+## Configuration Options
+
+### OpenAI Integration
+```typescript
+const ai = new OpenAI({
+  apiKey: string,                    // OpenAI API key (required)
+  openFilesApiKey: string,           // OpenFiles API key (required)  
+  basePath?: string,                 // File path prefix (optional)
+  timeout?: number,                  // Request timeout ms (default: 60000)
+  maxRetries?: number                // Failed request retries (default: 3)
+})
+```
+
+### Tools Integration
+```typescript
+const tools = createOpenFilesTools({
+  apiKey: string,                    // OpenFiles API key (required)
+  basePath?: string,                 // File path prefix (optional)
+  timeout?: number,                  // Request timeout ms (default: 60000)
+  maxRetries?: number                // Failed request retries (default: 3)
+})
+```
+
+### Core Client
+```typescript
+const client = new OpenFilesClient({
+  apiKey: string,                    // OpenFiles API key (required)
+  baseUrl?: string,                  // API base URL (default: https://api.openfiles.com/functions/v1/api)
+  basePath?: string,                 // File path prefix (optional) 
+  timeout?: number,                  // Request timeout ms (default: 60000)
+  maxRetries?: number                // Failed request retries (default: 3)
+})
+```
+
+## File Constraints
+
+| Constraint | Limit | Notes |
+|------------|-------|-------|
+| File size | 10MB | Per file operation |
+| Path length | 1000 characters | Including all path segments |
+| Filename length | 255 characters | Per path segment |
+| Request timeout | 60 seconds | Configurable up to 300s |
+| Concurrent requests | 100 | Per API key |
+
+## Path Format
+
+- Use forward slashes: `folder/subfolder/file.txt`
+- No leading slashes: `file.txt` not `/file.txt`
+- No trailing slashes: `folder/file.txt` not `folder/file.txt/`
+- Case sensitive on all platforms
+
+
+## Error Handling
+
+### HTTP Status Codes
+- `400` - Bad Request (invalid parameters)
+- `401` - Unauthorized (invalid API key)
+- `404` - Not Found (file doesn't exist)
+- `409` - Conflict (file already exists for write operations)
+- `413` - Payload Too Large (file exceeds size limit)
+- `429` - Rate Limited (too many requests)
+- `500` - Internal Server Error
+
+### SDK Error Types
+```typescript
+import { FileOperationError } from '@openfiles/sdk/core'
+
+try {
+  await client.writeFile({ path: 'file.txt', content: 'hello' })
+} catch (error) {
+  if (error instanceof FileOperationError) {
+    console.log(error.statusCode)  // HTTP status
+    console.log(error.code)        // Error code
+    console.log(error.message)     // Error description
+  }
+}
+```
+
+## Platform Support
+
+| Platform | OpenAI Integration | Tools | Core Client |
+|----------|-------------------|-------|-------------|
+| Node.js 18+ | ✅ | ✅ | ✅ |
+| Python 3.8+ | ✅ | ✅ | ✅ |
+| Deno | ❌ | ✅ | ✅ |
+| Bun | ✅ | ✅ | ✅ |
+| Edge Runtime | ❌ | ✅ | ✅ |
+| Browser | ❌ | ✅ | ✅ |
+
+## Integration Guides
+
+<CardGroup cols={3}>
+  <Card title="OpenAI Integration" icon="robot" href="/guides/openai-integration">
+    Drop-in replacement for OpenAI SDK
+  </Card>
+  <Card title="Tools Integration" icon="wrench" href="/guides/tools-integration">
+    Framework-agnostic tool definitions
+  </Card>
+  <Card title="Core Client" icon="code" href="/guides/core-client">
+    Direct API access and control
+  </Card>
+</CardGroup>

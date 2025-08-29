@@ -1,0 +1,96 @@
+---
+title: 'Authentication'
+description: 'Learn how to authenticate with the OpenFiles API'
+---
+
+# Authentication
+
+OpenFiles uses API keys and JWT tokens for secure access to your files.
+
+## API Key Authentication
+
+Most file operations use API key authentication via the `x-api-key` header.
+
+### Getting Your API Key
+
+1. **Sign up** at [console.openfiles.ai](https://console.openfiles.ai)
+2. **Navigate to Settings** in your console
+3. **Generate API Key** - Copy your key (starts with `oa_`)
+
+### Using Your API Key
+
+<CodeGroup>
+```bash cURL
+curl -X GET "https://api.openfiles.ai/files" \
+  -H "x-api-key: oa_your_api_key_here"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.openfiles.ai/files', {
+  headers: {
+    'x-api-key': 'oa_your_api_key_here'
+  }
+})
+```
+
+```python Python
+import requests
+
+headers = {
+    'x-api-key': 'oa_your_api_key_here'
+}
+
+response = requests.get('https://api.openfiles.ai/files', headers=headers)
+```
+</CodeGroup>
+
+## JWT Token Authentication 
+
+Project management endpoints use JWT Bearer tokens from your console session.
+
+### Using JWT Tokens
+
+<CodeGroup>
+```bash cURL
+curl -X GET "https://api.openfiles.ai/project" \
+  -H "Authorization: Bearer your_jwt_token"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.openfiles.ai/project', {
+  headers: {
+    'Authorization': 'Bearer your_jwt_token'
+  }
+})
+```
+</CodeGroup>
+
+## Security Best Practices
+
+<Warning>
+Never expose your API keys in client-side code or public repositories.
+</Warning>
+
+**✅ Good Practices:**
+- Store API keys in environment variables
+- Use different keys for development and production
+- Regenerate keys if compromised
+- Implement rate limiting in your applications
+
+**❌ Avoid:**
+- Hardcoding keys in source code
+- Sharing keys in public channels
+- Using production keys in development
+
+## Rate Limits
+
+| Tier | Requests/Minute | File Size Limit |
+|------|-----------------|-----------------|
+| **Free** | 100 | 10MB |
+| **Pro** | 1,000 | 100MB |
+| **Enterprise** | Custom | Custom |
+
+Rate limit headers are included in every response:
+- `X-RateLimit-Limit` - Your rate limit ceiling
+- `X-RateLimit-Remaining` - Requests remaining in current window
+- `X-RateLimit-Reset` - UTC time when the rate limit resets

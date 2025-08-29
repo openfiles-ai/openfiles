@@ -1,0 +1,52 @@
+---
+title: 'Append Content to File'
+description: 'Add content to the end of an existing file'
+openapi: put /files/append/{path}
+---
+
+# Append Content to File
+
+Adds new content to the end of an existing file without replacing the original content. Perfect for logs, ongoing documents, and incremental updates.
+
+## Use Cases
+
+- **Log files** - Add new log entries to existing logs
+- **Data collection** - Append new records to data files
+- **Document building** - Add sections to reports or documentation
+- **Chat histories** - Add new messages to conversation files
+
+## Example Usage
+
+<CodeGroup>
+```javascript JavaScript
+const response = await fetch('https://api.openfiles.com/files/append/logs/app.log', {
+  method: 'PUT',
+  headers: {
+    'Authorization': `Bearer ${API_KEY}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    content: '\n2024-01-15 10:30:00 INFO User login successful'
+  })
+})
+```
+
+```python Python
+import requests
+
+response = requests.put(
+    'https://api.openfiles.com/files/append/logs/app.log',
+    headers={'Authorization': f'Bearer {API_KEY}'},
+    json={'content': '\n2024-01-15 10:30:00 INFO User login successful'}
+)
+```
+
+```bash cURL
+curl -X PUT 'https://api.openfiles.com/files/append/logs/app.log' \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "content": "\n2024-01-15 10:30:00 INFO User login successful"
+  }'
+```
+</CodeGroup>

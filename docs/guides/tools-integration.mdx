@@ -1,0 +1,359 @@
+---
+title: 'Tools Integration'
+description: 'Framework-agnostic file tools for any AI provider'
+---
+
+# AI Framework Tools
+
+Use OpenFiles with any AI provider that supports tool calling - Anthropic Claude, Google Gemini, Cohere, and more.
+
+## How It Works
+
+1. **Import the tools** - Get OpenFiles tool definitions
+2. **Add to your AI** - Include tools in your AI requests
+3. **Process responses** - Handle file operations automatically
+4. **Continue conversation** - AI gets results and responds naturally
+
+## Features
+
+- ✅ **Universal Compatibility** - Works with any AI framework
+- ✅ **Standard Tool Format** - OpenAI-compatible tool definitions
+- ✅ **Selective Processing** - Only handles OpenFiles tools
+- ✅ **Automatic Execution** - File operations happen seamlessly
+- ✅ **Rich Error Handling** - Comprehensive error management
+
+## Installation
+
+<Tabs>
+  <Tab title="npm">
+    ```bash
+    npm install @openfiles/sdk
+    ```
+  </Tab>
+  <Tab title="yarn">
+    ```bash
+    yarn add @openfiles/sdk
+    ```
+  </Tab>
+  <Tab title="pnpm">
+    ```bash
+    pnpm add @openfiles/sdk
+    ```
+  </Tab>
+  <Tab title="pip">
+    ```bash
+    pip install openfiles
+    ```
+  </Tab>
+</Tabs>
+
+## Framework Examples
+
+### Anthropic Claude
+
+<CodeGroup>
+```typescript TypeScript
+import { OpenFilesTools } from '@openfiles/sdk/tools'
+import Anthropic from '@anthropic-ai/sdk'
+
+const tools = new OpenFilesTools({ 
+  apiKey: process.env.OPENFILES_API_KEY 
+})
+const anthropic = new Anthropic({ 
+  apiKey: process.env.ANTHROPIC_API_KEY 
+})
+
+// Add OpenFiles tools to Claude
+const response = await anthropic.messages.create({
+  model: 'claude-3-5-sonnet-20241022',
+  max_tokens: 1024,
+  messages: [{
+    role: 'user',
+    content: 'Create a vacation itinerary for 5 days in Paris and save it as paris-trip.md'
+  }],
+  tools: tools.definitions
+})
+
+// Process file operations
+const processed = await tools.processToolCalls(response)
+if (processed.handled) {
+  console.log(`✅ Handled ${processed.results.length} file operations`)
+}
+```
+
+```python Python
+from openfiles.tools import OpenFilesTools
+import anthropic
+
+tools = OpenFilesTools(api_key=os.getenv('OPENFILES_API_KEY'))
+client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+
+# Add OpenFiles tools to Claude
+response = client.messages.create(
+    model='claude-3-5-sonnet-20241022',
+    max_tokens=1024,
+    messages=[{
+        'role': 'user',
+        'content': 'Create a vacation itinerary for 5 days in Paris and save it as paris-trip.md'
+    }],
+    tools=tools.definitions
+)
+
+# Process file operations
+processed = await tools.process_tool_calls(response)
+if processed.handled:
+    print(f'✅ Handled {len(processed.results)} file operations')
+```
+</CodeGroup>
+
+### Google Gemini
+
+<CodeGroup>
+```typescript TypeScript
+import { OpenFilesTools } from '@openfiles/sdk/tools'
+import { GoogleGenerativeAI } from '@google/generative-ai'
+
+const tools = new OpenFilesTools({ 
+  apiKey: process.env.OPENFILES_API_KEY 
+})
+const genai = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY)
+
+// Add OpenFiles tools to Gemini
+const model = genai.getGenerativeModel({
+  model: 'gemini-1.5-pro',
+  tools: [{ functionDeclarations: tools.definitions }]
+})
+
+const response = await model.generateContent({
+  contents: [{
+    role: 'user',
+    parts: [{ text: 'Write a meal plan for the week with healthy recipes and save it as meal-plan.md' }]
+  }]
+})
+
+// Process file operations
+const processed = await tools.processToolCalls(response)
+```
+
+```python Python
+from openfiles.tools import OpenFilesTools
+import google.generativeai as genai
+
+tools = OpenFilesTools(api_key=os.getenv('OPENFILES_API_KEY'))
+genai.configure(api_key=os.getenv('GOOGLE_AI_API_KEY'))
+
+# Add OpenFiles tools to Gemini
+model = genai.GenerativeModel(
+    model_name='gemini-1.5-pro',
+    tools=[{'function_declarations': tools.definitions}]
+)
+
+response = model.generate_content(
+    'Write a meal plan for the week with healthy recipes and save it as meal-plan.md'
+)
+
+# Process file operations
+processed = await tools.process_tool_calls(response)
+```
+</CodeGroup>
+
+### Cohere
+
+<CodeGroup>
+```typescript TypeScript
+import { OpenFilesTools } from '@openfiles/sdk/tools'
+import { CohereClient } from 'cohere-ai'
+
+const tools = new OpenFilesTools({ 
+  apiKey: process.env.OPENFILES_API_KEY 
+})
+const cohere = new CohereClient({
+  token: process.env.COHERE_API_KEY
+})
+
+// Add OpenFiles tools to Cohere
+const response = await cohere.chat({
+  model: 'command-r-plus',
+  message: 'Create a birthday party checklist and save it as party-checklist.md',
+  tools: tools.definitions
+})
+
+// Process file operations  
+const processed = await tools.processToolCalls(response)
+```
+
+```python Python
+from openfiles.tools import OpenFilesTools
+import cohere
+
+tools = OpenFilesTools(api_key=os.getenv('OPENFILES_API_KEY'))
+co = cohere.Client(api_key=os.getenv('COHERE_API_KEY'))
+
+# Add OpenFiles tools to Cohere
+response = co.chat(
+    model='command-r-plus',
+    message='Create a birthday party checklist and save it as party-checklist.md',
+    tools=tools.definitions
+)
+
+# Process file operations
+processed = await tools.process_tool_calls(response)
+```
+</CodeGroup>
+
+## Available Tools
+
+| Tool | Description | Use Case |
+|------|-------------|----------|
+| `write_file` | Create new file | AI generates shopping lists, itineraries, recipes |
+| `read_file` | Read and display file | AI reviews existing content before making changes |
+| `edit_file` | Modify specific text | AI fixes typos, updates lists, adds items |
+| `list_files` | Browse directory | AI explores saved files to find what you need |
+| `append_to_file` | Add content to end | AI adds new items to lists, notes to journals |
+| `overwrite_file` | Replace entire content | AI completely rewrites outdated documents |
+| `get_file_metadata` | Get file info only | AI checks file size, version, dates |
+| `get_file_versions` | Access file history | AI reviews changes over time or reverts to previous versions |
+
+## File Organization
+
+Use `basePath` to organize files by project:
+
+<CodeGroup>
+```typescript TypeScript
+const personalTools = new OpenFilesTools({ 
+  apiKey: 'oa-...',
+  basePath: 'personal/recipes'
+})
+
+const travelTools = new OpenFilesTools({ 
+  apiKey: 'oa-...',
+  basePath: 'travel/itineraries'
+})
+
+// Each tool set operates in its own namespace
+```
+
+```python Python
+personal_tools = OpenFilesTools(
+    api_key='oa-...',
+    base_path='personal/recipes'
+)
+
+travel_tools = OpenFilesTools(
+    api_key='oa-...',
+    base_path='travel/itineraries'
+)
+
+# Each tool set operates in its own namespace
+```
+</CodeGroup>
+
+## Advanced Usage
+
+### Custom Tool Processing
+
+<CodeGroup>
+```typescript TypeScript
+const tools = new OpenFilesTools({ 
+  apiKey: 'oa-...',
+  onFileOperation: (op) => {
+    console.log(`📁 ${op.action}: ${op.path}`)
+    // Custom logging, metrics, webhooks
+  },
+  onError: (error) => {
+    console.error(`❌ File operation failed: ${error.message}`)
+    // Custom error handling, retries, notifications
+  }
+})
+```
+
+```python Python
+def on_file_operation(op):
+    print(f'📁 {op.action}: {op.path}')
+    # Custom logging, metrics, webhooks
+
+def on_error(error):
+    print(f'❌ File operation failed: {error.message}')
+    # Custom error handling, retries, notifications
+
+tools = OpenFilesTools(
+    api_key='oa-...',
+    on_file_operation=on_file_operation,
+    on_error=on_error
+)
+```
+</CodeGroup>
+
+### Multi-Agent Workflows
+
+```typescript
+// Create specialized agents with different file scopes
+const recipeAgent = new OpenFilesTools({ 
+  apiKey: 'oa-...',
+  basePath: 'recipes'
+})
+
+const travelAgent = new OpenFilesTools({ 
+  apiKey: 'oa-...',
+  basePath: 'travel-plans'
+})
+
+const shoppingAgent = new OpenFilesTools({ 
+  apiKey: 'oa-...',
+  basePath: 'shopping-lists'
+})
+
+// Each agent works in isolated file spaces
+// but can collaborate on shared projects
+```
+
+## Error Handling
+
+<CodeGroup>
+```typescript TypeScript
+try {
+  const processed = await tools.processToolCalls(response)
+  
+  for (const result of processed.results) {
+    if (result.status === 'success') {
+      console.log(`✅ ${result.function}: ${result.data?.path}`)
+    } else {
+      console.error(`❌ ${result.function}: ${result.error}`)
+    }
+  }
+} catch (error) {
+  console.error('Tool processing failed:', error.message)
+}
+```
+
+```python Python
+try:
+    processed = await tools.process_tool_calls(response)
+    
+    for result in processed.results:
+        if result.status == 'success':
+            print(f'✅ {result.function}: {result.data.path if result.data else "completed"}')
+        else:
+            print(f'❌ {result.function}: {result.error}')
+            
+except Exception as error:
+    print(f'Tool processing failed: {error}')
+```
+</CodeGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Core Client" icon="code" href="/guides/core-client">
+    Need direct API control? Use the Core Client
+  </Card>
+  <Card title="OpenAI Integration" icon="robot" href="/guides/openai-integration">
+    Using OpenAI? Try our seamless integration
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference/quickstart">
+    Explore the complete REST API
+  </Card>
+  <Card title="Examples" icon="github" href="/resources/examples">
+    See real implementations on GitHub
+  </Card>
+</CardGroup>

@@ -104,6 +104,8 @@ export interface OverwriteParams {
 export interface ListParams {
   /** Directory path to list (defaults to '/') */
   directory?: string
+  /** If true, lists all files across all directories. If false (default), only lists files in the specified directory */
+  recursive?: boolean
   /** Maximum number of files to return */
   limit?: number
   /** Offset for pagination */
@@ -457,6 +459,7 @@ export class OpenFilesClient {
           client: this.client,
           query: {
             directory: resolvedDirectory,
+            recursive: params.recursive,
             limit: params.limit || 10,
             offset: params.offset || 0
           }

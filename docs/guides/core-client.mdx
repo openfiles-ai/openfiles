@@ -1,0 +1,526 @@
+---
+title: 'Core Client'
+description: 'Direct access to the OpenFiles API with complete control over file operations. Perfect for custom integrations, non-AI workflows, and advanced use cases.'
+---
+
+## How It Works
+
+1. **Import the client** - Get direct API access
+2. **Configure authentication** - Set your API key
+3. **Call file operations** - Use methods directly
+4. **Handle responses** - Process results as needed
+
+## Features
+
+- ✅ **Direct API Access** - No AI dependencies or abstractions
+- ✅ **Complete Control** - Full access to all 8 file operations
+- ✅ **Type Safety** - Full TypeScript support with Pydantic models
+- ✅ **Custom Integration** - Build your own tools and workflows
+- ✅ **Performance** - Minimal overhead, maximum speed
+
+## Installation
+
+<Tabs>
+  <Tab title="npm">
+    ```bash
+    npm install @openfiles/sdk
+    ```
+  </Tab>
+  <Tab title="yarn">
+    ```bash
+    yarn add @openfiles/sdk
+    ```
+  </Tab>
+  <Tab title="pnpm">
+    ```bash
+    pnpm add @openfiles/sdk
+    ```
+  </Tab>
+  <Tab title="pip">
+    ```bash
+    pip install openfiles
+    ```
+  </Tab>
+</Tabs>
+
+## Basic Usage
+
+<CodeGroup>
+```typescript TypeScript
+import { OpenFilesClient } from '@openfiles/sdk/core'
+
+const client = new OpenFilesClient({
+  apiKey: process.env.OPENFILES_API_KEY,
+  basePath: 'my-project'  // Optional: organize files
+})
+
+// Write a file
+const writeResult = await client.writeFile({
+  path: 'reports/quarterly-summary.md',
+  content: '# Q1 2025 Summary\n\nRevenue increased 25%...',
+  contentType: 'text/markdown'
+})
+console.log(`Created file: ${writeResult.data.path}, version ${writeResult.data.version}`)
+
+// Read the file back
+const readResult = await client.readFile({ path: 'reports/quarterly-summary.md' })
+console.log(`Content: ${readResult.data.content}`)
+
+// Edit the file
+await client.editFile({
+  path: 'reports/quarterly-summary.md',
+  oldString: 'Revenue increased 25%',
+  newString: 'Revenue increased 28%'
+})
+
+// List all files
+const listResult = await client.listFiles({ directory: 'reports' })
+console.log(`Found ${listResult.data.files.length} files`)
+```
+
+```python Python
+from openfiles import OpenFilesClient
+import os
+import asyncio
+
+async def main():
+    client = OpenFilesClient(
+        api_key=os.getenv('OPENFILES_API_KEY'),
+        base_path='my-project'  # Optional: organize files
+    )
+
+    # Write a file
+    write_result = await client.write_file(
+        path='reports/quarterly-summary.md',
+        content='# Q1 2025 Summary\n\nRevenue increased 25%...',
+        content_type='text/markdown'
+    )
+    print(f'Created file: {write_result.data.path}, version {write_result.data.version}')
+
+    # Read the file back
+    read_result = await client.read_file(path='reports/quarterly-summary.md')
+    print(f'Content: {read_result.data.content}')
+
+    # Edit the file
+    await client.edit_file(
+        path='reports/quarterly-summary.md',
+        old_string='Revenue increased 25%',
+        new_string='Revenue increased 28%'
+    )
+
+    # List all files
+    list_result = await client.list_files(directory='reports')
+    print(f'Found {len(list_result.data.files)} files')
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+</CodeGroup>
+
+## File Operations
+
+### Write File
+
+Create a new file or new version of existing file:
+
+<CodeGroup>
+```typescript TypeScript
+const result = await client.writeFile({
+  path: 'docs/api-guide.md',
+  content: '# API Guide\n\nThis guide covers...',
+  contentType: 'text/markdown'
+})
+// Creates version 1, or increments version if file exists
+```
+
+```python Python
+async def write_example():
+    result = await client.write_file(
+        path='docs/api-guide.md',
+        content='# API Guide\n\nThis guide covers...',
+        content_type='text/markdown'
+    )
+    # Creates version 1, or increments version if file exists
+```
+</CodeGroup>
+
+### Read File
+
+Get file content and metadata:
+
+<CodeGroup>
+```typescript TypeScript
+// Read latest version
+const latest = await client.readFile({ path: 'docs/api-guide.md' })
+
+// Read specific version
+const v1 = await client.readFile({ 
+  path: 'docs/api-guide.md', 
+  version: 1 
+})
+
+// Get only metadata (no content)
+const metadata = await client.getMetadata({ path: 'docs/api-guide.md' })
+```
+
+```python Python
+async def read_example():
+    # Read latest version
+    latest = await client.read_file(path='docs/api-guide.md')
+
+    # Read specific version
+    v1 = await client.read_file(path='docs/api-guide.md', version=1)
+
+    # Get only metadata (no content)
+    metadata = await client.get_metadata(path='docs/api-guide.md')
+```
+</CodeGroup>
+
+### Edit File
+
+Find and replace specific content:
+
+<CodeGroup>
+```typescript TypeScript
+await client.editFile({
+  path: 'config/settings.json',
+  oldString: '"debug": false',
+  newString: '"debug": true'
+})
+// Creates new version with the change
+```
+
+```python Python
+async def edit_example():
+    await client.edit_file(
+        path='config/settings.json',
+        old_string='"debug": false',
+        new_string='"debug": true'
+    )
+    # Creates new version with the change
+```
+</CodeGroup>
+
+### List Files
+
+Browse files and directories:
+
+<CodeGroup>
+```typescript TypeScript
+// List all files
+const allFiles = await client.listFiles()
+
+// List files in specific directory
+const docs = await client.listFiles({ directory: 'docs' })
+
+// Filter by content type
+const markdownFiles = await client.listFiles({ 
+  contentType: 'text/markdown' 
+})
+
+// Paginated results
+const page1 = await client.listFiles({ 
+  limit: 10, 
+  offset: 0 
+})
+```
+
+```python Python
+async def list_example():
+    # List all files
+    all_files = await client.list_files()
+
+    # List files in specific directory
+    docs = await client.list_files(directory='docs')
+
+    # Filter by content type
+    markdown_files = await client.list_files(content_type='text/markdown')
+
+    # Paginated results
+    page1 = await client.list_files(limit=10, offset=0)
+```
+</CodeGroup>
+
+### Append to File
+
+Add content to the end of a file:
+
+<CodeGroup>
+```typescript TypeScript
+await client.appendToFile({
+  path: 'logs/application.log',
+  content: '\n2025-01-15 10:30:00 - User authenticated successfully'
+})
+```
+
+```python Python
+async def append_example():
+    await client.append_to_file(
+        path='logs/application.log',
+        content='\n2025-01-15 10:30:00 - User authenticated successfully'
+    )
+```
+</CodeGroup>
+
+### Overwrite File
+
+Replace entire file content:
+
+<CodeGroup>
+```typescript TypeScript
+await client.overwriteFile({
+  path: 'config/environment.json',
+  content: JSON.stringify({ env: 'production', debug: false }, null, 2)
+})
+```
+
+```python Python
+import json
+
+async def overwrite_example():
+    await client.overwrite_file(
+        path='config/environment.json',
+        content=json.dumps({'env': 'production', 'debug': False}, indent=2)
+    )
+```
+</CodeGroup>
+
+### Get File Versions
+
+Access complete version history:
+
+<CodeGroup>
+```typescript TypeScript
+const versions = await client.getVersions({ 
+  path: 'docs/changelog.md',
+  limit: 20 
+})
+
+console.log(`File has ${versions.data.total} versions`)
+for (const version of versions.data.versions) {
+  console.log(`Version ${version.version}: ${version.size} bytes, ${version.createdAt}`)
+}
+```
+
+```python Python
+async def versions_example():
+    versions = await client.get_versions(
+        path='docs/changelog.md',
+        limit=20
+    )
+
+    print(f'File has {versions.data.total} versions')
+    for version in versions.data.versions:
+        print(f'Version {version.version}: {version.size} bytes, {version.created_at}')
+```
+</CodeGroup>
+
+## Advanced Configuration
+
+### Custom Base URL and Timeouts
+
+<CodeGroup>
+```typescript TypeScript
+const client = new OpenFilesClient({
+  apiKey: 'oa-...',
+  baseUrl: 'https://api.openfiles.ai/functions/v1/api',
+  timeout: 60000,     // 60 second timeout
+  retries: 3,         // Retry failed requests
+  debug: true         // Enable debug logging
+})
+```
+
+```python Python
+client = OpenFilesClient(
+    api_key='oa-...',
+    base_url='https://api.openfiles.ai/functions/v1/api',
+    timeout=60000,      # 60 second timeout
+    retries=3,          # Retry failed requests
+    debug=True          # Enable debug logging
+)
+```
+</CodeGroup>
+
+### File Organization with BasePath
+
+<CodeGroup>
+```typescript TypeScript
+// Separate clients for different projects
+const projectA = new OpenFilesClient({
+  apiKey: 'oa-...',
+  basePath: 'clients/project-a'
+})
+
+const projectB = new OpenFilesClient({
+  apiKey: 'oa-...',
+  basePath: 'clients/project-b'
+})
+
+// Files are automatically organized:
+// clients/project-a/documents/contract.pdf
+// clients/project-b/documents/contract.pdf
+```
+
+```python Python
+# Separate clients for different projects
+project_a = OpenFilesClient(
+    api_key='oa-...',
+    base_path='clients/project-a'
+)
+
+project_b = OpenFilesClient(
+    api_key='oa-...',
+    base_path='clients/project-b'
+)
+
+# Files are automatically organized:
+# clients/project-a/documents/contract.pdf  
+# clients/project-b/documents/contract.pdf
+```
+</CodeGroup>
+
+## Error Handling
+
+<CodeGroup>
+```typescript TypeScript
+import { FileOperationError } from '@openfiles/sdk/core'
+
+try {
+  await client.writeFile({
+    path: 'documents/report.md',
+    content: 'Report content...'
+  })
+} catch (error) {
+  if (error instanceof FileOperationError) {
+    console.error(`File operation failed: ${error.message}`)
+    console.error(`Error code: ${error.code}`)
+    console.error(`HTTP status: ${error.statusCode}`)
+    
+    if (error.statusCode === 409) {
+      // File already exists - use editFile or overwriteFile instead
+      console.log('File exists, trying overwrite...')
+      await client.overwriteFile({
+        path: 'documents/report.md',
+        content: 'Updated report content...'
+      })
+    }
+  } else {
+    console.error('Unexpected error:', error)
+  }
+}
+```
+
+```python Python
+from openfiles.exceptions import FileOperationError
+import asyncio
+
+async def error_handling_example():
+    try:
+        await client.write_file(
+            path='documents/report.md',
+            content='Report content...'
+        )
+    except FileOperationError as error:
+        print(f'File operation failed: {error.message}')
+        print(f'Error code: {error.code}')
+        print(f'HTTP status: {error.status_code}')
+        
+        if error.status_code == 409:
+            # File already exists - use edit_file or overwrite_file instead
+            print('File exists, trying overwrite...')
+            await client.overwrite_file(
+                path='documents/report.md',
+                content='Updated report content...'
+            )
+    except Exception as error:
+        print(f'Unexpected error: {error}')
+```
+</CodeGroup>
+
+## Use Cases
+
+### Custom CMS Integration
+
+```typescript
+class DocumentManager {
+  constructor(private client: OpenFilesClient) {}
+  
+  async createPost(title: string, content: string, author: string) {
+    const slug = title.toLowerCase().replace(/\s+/g, '-')
+    const frontmatter = `---
+title: "${title}"
+author: "${author}"
+created: "${new Date().toISOString()}"
+---
+
+`
+    
+    return await this.client.writeFile({
+      path: `blog/posts/${slug}.md`,
+      content: frontmatter + content,
+      contentType: 'text/markdown'
+    })
+  }
+  
+  async updatePost(slug: string, newContent: string) {
+    // Read current post to preserve frontmatter
+    const current = await this.client.readFile({ 
+      path: `blog/posts/${slug}.md` 
+    })
+    
+    // Extract frontmatter and update content
+    const [, frontmatter, ] = current.data.content.match(/(---[\s\S]*?---)\n\n([\s\S]*)/)
+    
+    return await this.client.overwriteFile({
+      path: `blog/posts/${slug}.md`,
+      content: frontmatter + '\n\n' + newContent
+    })
+  }
+}
+```
+
+### File Backup System
+
+```typescript
+class BackupManager {
+  constructor(private client: OpenFilesClient) {}
+  
+  async backupFile(sourcePath: string) {
+    const file = await this.client.readFile({ path: sourcePath })
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const backupPath = `backups/${sourcePath.replace('/', '_')}_${timestamp}`
+    
+    return await this.client.writeFile({
+      path: backupPath,
+      content: file.data.content,
+      contentType: file.data.mimeType
+    })
+  }
+  
+  async restoreFromBackup(backupPath: string, targetPath: string) {
+    const backup = await this.client.readFile({ path: backupPath })
+    
+    return await this.client.overwriteFile({
+      path: targetPath,
+      content: backup.data.content
+    })
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Tools Integration" icon="wrench" href="/guides/tools-integration">
+    Add file operations to any AI framework
+  </Card>
+  <Card title="OpenAI Integration" icon="robot" href="/guides/openai-integration">
+    Seamless OpenAI SDK integration
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference/quickstart">
+    Complete REST API documentation
+  </Card>
+  <Card title="Examples" icon="github" href="/resources/examples">
+    Real-world implementations on GitHub
+  </Card>
+</CardGroup>

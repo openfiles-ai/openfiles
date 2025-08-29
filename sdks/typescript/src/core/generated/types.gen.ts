@@ -202,7 +202,14 @@ export type ListFilesData = {
     body?: never;
     path?: never;
     query?: {
+        /**
+         * Directory to list files from
+         */
         directory?: string;
+        /**
+         * If true, lists all files across all directories. If false (default), only lists files in the specified directory.
+         */
+        recursive?: boolean;
         contentType?: string;
         limit?: number;
         offset?: number;

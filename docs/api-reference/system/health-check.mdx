@@ -1,0 +1,49 @@
+---
+title: 'Health Check'
+description: 'Check if the OpenFiles API is operational'
+openapi: get /health
+---
+
+# Health Check
+
+Check the operational status of the OpenFiles API. This endpoint is useful for monitoring, load balancers, and health checks in production systems.
+
+## Use Cases
+
+- **System monitoring** - Check if API is responsive
+- **Load balancer health checks** - Verify endpoint availability
+- **Integration testing** - Confirm API connectivity
+- **Status dashboards** - Monitor service uptime
+
+## Example Usage
+
+<CodeGroup>
+```javascript JavaScript
+const response = await fetch('https://api.openfiles.com/health')
+const health = await response.json()
+console.log(health.status) // "ok"
+```
+
+```python Python
+import requests
+
+response = requests.get('https://api.openfiles.com/health')
+health = response.json()
+print(health['status'])  # "ok"
+```
+
+```bash cURL
+curl 'https://api.openfiles.com/health'
+```
+</CodeGroup>
+
+## Response
+
+The health check returns a simple JSON response indicating the API status.
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```

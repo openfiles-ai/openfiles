@@ -1,0 +1,189 @@
+---
+title: 'Error Handling'
+description: 'Understanding OpenFiles API errors and how to handle them'
+---
+
+# Error Handling
+
+OpenFiles API uses conventional HTTP response codes and provides detailed error information.
+
+## HTTP Status Codes
+
+| Code | Meaning | Description |
+|------|---------|-------------|
+| **200** | Success | Request completed successfully |
+| **400** | Bad Request | Invalid request parameters or format |
+| **401** | Unauthorized | Missing or invalid authentication |
+| **404** | Not Found | File or resource doesn't exist |
+| **409** | Conflict | File already exists (write operation) |
+| **422** | Unprocessable Entity | Business rule violation |
+| **429** | Too Many Requests | Rate limit exceeded |
+| **500** | Internal Server Error | Server-side error |
+
+## Error Response Format
+
+All errors return a consistent JSON structure:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FILE_NOT_FOUND",
+    "message": "File not found at path: documents/report.pdf"
+  },
+  "operation": "read_file",
+  "details": {
+    "path": "documents/report.pdf",
+    "timestamp": "2025-01-15T10:30:00Z"
+  }
+}
+```
+
+## Common Error Codes
+
+### Authentication Errors
+
+<Accordion title="INVALID_API_KEY">
+**HTTP 401** - API key is missing, malformed, or invalid
+
+**Solution:**
+- Verify your API key starts with `oa_`
+- Check for extra spaces or characters
+- Regenerate key if compromised
+</Accordion>
+
+<Accordion title="RATE_LIMIT_EXCEEDED">
+**HTTP 429** - Too many requests in time window
+
+**Solution:**
+- Implement exponential backoff
+- Check `X-RateLimit-Reset` header
+- Upgrade tier for higher limits
+</Accordion>
+
+### File Operation Errors
+
+<Accordion title="FILE_NOT_FOUND">
+**HTTP 404** - Requested file doesn't exist
+
+**Solution:**
+- Verify file path (no leading slashes)
+- Use `list_files` to check available files
+- Ensure file was created successfully
+</Accordion>
+
+<Accordion title="FILE_ALREADY_EXISTS">
+**HTTP 409** - File exists, use edit/overwrite instead
+
+**Solution:**
+- Use `edit_file` for partial updates
+- Use `overwrite_file` to replace content
+- Add version parameter to create new version
+</Accordion>
+
+<Accordion title="INVALID_PATH">
+**HTTP 400** - File path format is invalid
+
+**Solution:**
+- Use forward slashes: `folder/file.txt`
+- No leading slashes: `folder/file.txt` not `/folder/file.txt`
+- Avoid special characters in paths
+</Accordion>
+
+<Accordion title="CONTENT_TOO_LARGE">
+**HTTP 413** - File exceeds size limits
+
+**Solution:**
+- Check tier limits (Free: 10MB, Pro: 100MB)
+- Break large files into chunks
+- Consider upgrading for larger limits
+</Accordion>
+
+<Accordion title="STRING_NOT_FOUND">
+**HTTP 422** - String to replace not found in file
+
+**Solution:**
+- Verify exact string match (case-sensitive)
+- Check for invisible characters or encoding
+- Use `read_file` to see current content
+</Accordion>
+
+## Error Handling Best Practices
+
+### Retry Logic
+
+Implement exponential backoff for transient errors:
+
+<CodeGroup>
+```javascript JavaScript
+async function apiCallWithRetry(apiCall, maxRetries = 3) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await apiCall()
+    } catch (error) {
+      if (error.status === 429 || error.status >= 500) {
+        const delay = Math.min(1000 * Math.pow(2, attempt), 30000)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        continue
+      }
+      throw error // Don't retry client errors
+    }
+  }
+  throw new Error('Max retries exceeded')
+}
+```
+
+```python Python
+import time
+import random
+from typing import Callable, Any
+
+async def api_call_with_retry(api_call: Callable, max_retries: int = 3) -> Any:
+    for attempt in range(max_retries):
+        try:
+            return await api_call()
+        except Exception as error:
+            if hasattr(error, 'status') and (error.status == 429 or error.status >= 500):
+                delay = min(1000 * (2 ** attempt) + random.uniform(0, 1000), 30000) / 1000
+                time.sleep(delay)
+                continue
+            raise error  # Don't retry client errors
+    
+    raise Exception('Max retries exceeded')
+```
+</CodeGroup>
+
+### Logging and Monitoring
+
+Track error patterns to improve reliability:
+
+```javascript
+function logApiError(error, operation, context) {
+  console.error('OpenFiles API Error', {
+    operation,
+    errorCode: error.error?.code,
+    message: error.error?.message,
+    statusCode: error.status,
+    context,
+    timestamp: new Date().toISOString()
+  })
+  
+  // Send to monitoring service
+  if (error.status >= 500) {
+    monitoring.reportServerError(error)
+  }
+}
+```
+
+## Getting Help
+
+If you encounter persistent errors:
+
+<CardGroup cols={2}>
+  <Card title="Check API Status" icon="gauge-high">
+    Visit [status.openfiles.ai](https://status.openfiles.ai) for service status
+  </Card>
+  <Card title="Discord Support" icon="discord">
+    Get help in [discord.gg/openfiles](https://discord.gg/openfiles)
+  </Card>
+</CardGroup>
