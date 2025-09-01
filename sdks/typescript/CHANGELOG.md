@@ -1,5 +1,11 @@
 # @openfiles-ai/sdk
 
+## 0.1.5
+
+### Patch Changes
+
+- Fix recursive parameter handling to only send when explicitly set
+
 ## 0.1.4
 
 ### Patch Changes
