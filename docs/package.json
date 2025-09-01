@@ -1,5 +1,8 @@
 {
   "name": "@openfiles-ai/docs",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "dev": "pnpx mint dev --port 3001"
+  }
 }

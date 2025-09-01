@@ -5,35 +5,36 @@ description: 'Technical documentation for OpenFiles SDKs.'
 
 ## Import Paths
 
-### TypeScript/JavaScript
-```typescript
+<CodeGroup>
+```typescript TypeScript
 // OpenAI integration
-import OpenAI from '@openfiles/sdk/openai'
+import OpenAI from '@openfiles-ai/sdk/openai'
 
 // Tools integration
-import { createOpenFilesTools } from '@openfiles/sdk/tools'
+import { createOpenFilesTools } from '@openfiles-ai/sdk/tools'
 
 // Core client
-import { OpenFilesClient } from '@openfiles/sdk/core'
+import { OpenFilesClient } from '@openfiles-ai/sdk/core'
 ```
 
-### Python
-```python
+```python Python
 # OpenAI integration
-from openfiles import OpenAI
+from openfiles_ai import OpenAI
 
 # Tools integration
-from openfiles.tools import create_openfiles_tools
+from openfiles_ai.tools import create_openfiles_tools
 
 # Core client
-from openfiles import OpenFilesClient
+from openfiles_ai import OpenFilesClient
 ```
+</CodeGroup>
 
 
 ## Configuration Options
 
 ### OpenAI Integration
-```typescript
+<CodeGroup>
+```typescript TypeScript
 const ai = new OpenAI({
   apiKey: string,                    // OpenAI API key (required)
   openFilesApiKey: string,           // OpenFiles API key (required)  
@@ -43,8 +44,20 @@ const ai = new OpenAI({
 })
 ```
 
+```python Python
+ai = OpenAI(
+    api_key='sk-...',                # OpenAI API key (required)
+    openfiles_api_key='oa-...',      # OpenFiles API key (required)
+    base_path='my-project',          # File path prefix (optional)
+    timeout=60000,                   # Request timeout ms (default: 60000)
+    max_retries=3                    # Failed request retries (default: 3)
+)
+```
+</CodeGroup>
+
 ### Tools Integration
-```typescript
+<CodeGroup>
+```typescript TypeScript
 const tools = createOpenFilesTools({
   apiKey: string,                    // OpenFiles API key (required)
   basePath?: string,                 // File path prefix (optional)
@@ -53,16 +66,38 @@ const tools = createOpenFilesTools({
 })
 ```
 
+```python Python
+tools = create_openfiles_tools(
+    api_key='oa-...',                # OpenFiles API key (required)
+    base_path='my-project',          # File path prefix (optional)
+    timeout=60000,                   # Request timeout ms (default: 60000)
+    max_retries=3                    # Failed request retries (default: 3)
+)
+```
+</CodeGroup>
+
 ### Core Client
-```typescript
+<CodeGroup>
+```typescript TypeScript
 const client = new OpenFilesClient({
   apiKey: string,                    // OpenFiles API key (required)
-  baseUrl?: string,                  // API base URL (default: https://api.openfiles.com/functions/v1/api)
+  baseUrl?: string,                  // API base URL (default: https://api.openfiles.ai/functions/v1/api)
   basePath?: string,                 // File path prefix (optional) 
   timeout?: number,                  // Request timeout ms (default: 60000)
   maxRetries?: number                // Failed request retries (default: 3)
 })
 ```
+
+```python Python
+client = OpenFilesClient(
+    api_key='oa-...',                # OpenFiles API key (required)
+    base_url='https://api.openfiles.ai/functions/v1/api',  # API base URL
+    base_path='my-project',          # File path prefix (optional)
+    timeout=60000,                   # Request timeout ms (default: 60000)
+    max_retries=3                    # Failed request retries (default: 3)
+)
+```
+</CodeGroup>
 
 ## File Constraints
 
@@ -94,8 +129,9 @@ const client = new OpenFilesClient({
 - `500` - Internal Server Error
 
 ### SDK Error Types
-```typescript
-import { FileOperationError } from '@openfiles/sdk/core'
+<CodeGroup>
+```typescript TypeScript
+import { FileOperationError } from '@openfiles-ai/sdk/core'
 
 try {
   await client.writeFile({ path: 'file.txt', content: 'hello' })
@@ -107,6 +143,18 @@ try {
   }
 }
 ```
+
+```python Python
+from openfiles_ai.exceptions import FileOperationError
+
+try:
+    await client.write_file(path='file.txt', content='hello')
+except FileOperationError as error:
+    print(error.status_code)  # HTTP status
+    print(error.code)         # Error code
+    print(error.message)      # Error description
+```
+</CodeGroup>
 
 ## Platform Support
 

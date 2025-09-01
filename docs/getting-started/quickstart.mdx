@@ -20,22 +20,22 @@ description: 'Get file operations working with your AI agent in 2 minutes.'
 <Tabs>
   <Tab title="npm">
     ```bash
-    npm install @openfiles/sdk
+    npm install @openfiles-ai/sdk
     ```
   </Tab>
   <Tab title="yarn">
     ```bash
-    yarn add @openfiles/sdk
+    yarn add @openfiles-ai/sdk
     ```
   </Tab>
   <Tab title="pnpm">
     ```bash
-    pnpm add @openfiles/sdk
+    pnpm add @openfiles-ai/sdk
     ```
   </Tab>
   <Tab title="pip">
     ```bash
-    pip install openfiles
+    pip install openfiles-ai
     ```
   </Tab>
 </Tabs>
@@ -53,7 +53,7 @@ Replace your OpenAI import and add the OpenFiles API key:
 
 <CodeGroup>
 ```typescript TypeScript
-import OpenAI from '@openfiles/sdk/openai'  // Changed from 'openai'
+import OpenAI from '@openfiles-ai/sdk/openai'  // Changed from 'openai'
 
 const ai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -72,7 +72,7 @@ console.log(response.choices[0].message.content)
 ```
 
 ```python Python
-from openfiles import OpenAI  # Changed from 'openai'
+from openfiles_ai import OpenAI  # Changed from 'openai'
 import asyncio
 import os
 
@@ -129,23 +129,11 @@ Try these prompts to test file operations:
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Choose Integration" icon="code" href="/getting-started/choose-your-path">
-    Explore other integration options
+  <Card title="OpenAI Integration Guide" icon="robot" href="/guides/openai-integration">
+    Learn advanced OpenAI features and configuration
   </Card>
-  <Card title="API Reference" icon="book" href="/api-reference/authentication">
-    Learn about the REST API
+  <Card title="Tools Integration" icon="wrench" href="/guides/tools-integration">
+    Use OpenFiles with Claude, Gemini, and other AI providers
   </Card>
 </CardGroup>
 
-## Environment Variables
-
-For production, set these environment variables:
-
-```bash
-OPENAI_API_KEY=sk_...
-OPENFILES_API_KEY=oa_...
-```
-
-<Note>
-Never commit API keys to version control. Use environment variables or a secure secrets manager.
-</Note>

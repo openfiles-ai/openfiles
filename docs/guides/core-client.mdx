@@ -23,22 +23,22 @@ description: 'Direct access to the OpenFiles API with complete control over file
 <Tabs>
   <Tab title="npm">
     ```bash
-    npm install @openfiles/sdk
+    npm install @openfiles-ai/sdk
     ```
   </Tab>
   <Tab title="yarn">
     ```bash
-    yarn add @openfiles/sdk
+    yarn add @openfiles-ai/sdk
     ```
   </Tab>
   <Tab title="pnpm">
     ```bash
-    pnpm add @openfiles/sdk
+    pnpm add @openfiles-ai/sdk
     ```
   </Tab>
   <Tab title="pip">
     ```bash
-    pip install openfiles
+    pip install openfiles-ai
     ```
   </Tab>
 </Tabs>
@@ -47,7 +47,7 @@ description: 'Direct access to the OpenFiles API with complete control over file
 
 <CodeGroup>
 ```typescript TypeScript
-import { OpenFilesClient } from '@openfiles/sdk/core'
+import { OpenFilesClient } from '@openfiles-ai/sdk/core'
 
 const client = new OpenFilesClient({
   apiKey: process.env.OPENFILES_API_KEY,
@@ -79,7 +79,7 @@ console.log(`Found ${listResult.data.files.length} files`)
 ```
 
 ```python Python
-from openfiles import OpenFilesClient
+from openfiles_ai import OpenFilesClient
 import os
 import asyncio
 
@@ -383,7 +383,7 @@ project_b = OpenFilesClient(
 
 <CodeGroup>
 ```typescript TypeScript
-import { FileOperationError } from '@openfiles/sdk/core'
+import { FileOperationError } from '@openfiles-ai/sdk/core'
 
 try {
   await client.writeFile({
@@ -411,7 +411,7 @@ try {
 ```
 
 ```python Python
-from openfiles.exceptions import FileOperationError
+from openfiles_ai.exceptions import FileOperationError
 import asyncio
 
 async def error_handling_example():
@@ -511,16 +511,10 @@ class BackupManager {
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Tools Integration" icon="wrench" href="/guides/tools-integration">
-    Add file operations to any AI framework
-  </Card>
-  <Card title="OpenAI Integration" icon="robot" href="/guides/openai-integration">
-    Seamless OpenAI SDK integration
+  <Card title="Examples" icon="github" href="/resources/examples">
+    See real Core Client implementations
   </Card>
   <Card title="API Reference" icon="book" href="/api-reference/quickstart">
-    Complete REST API documentation
-  </Card>
-  <Card title="Examples" icon="github" href="/resources/examples">
-    Real-world implementations on GitHub
+    Explore the complete REST API
   </Card>
 </CardGroup>

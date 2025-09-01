@@ -48,7 +48,7 @@ description: 'Get help with OpenFiles integration and file operations.'
     npm cache clean --force
     
     # Reinstall
-    npm install @openfiles/sdk
+    npm install @openfiles-ai/sdk
     ```
     
     **Python**
@@ -63,7 +63,7 @@ description: 'Get help with OpenFiles integration and file operations.'
   
   <Accordion title="Integration Problems">
     **OpenAI Integration**
-    - Ensure you're importing from `@openfiles/sdk/openai`
+    - Ensure you're importing from `@openfiles-ai/sdk/openai`
     - Both OpenAI and OpenFiles API keys must be valid
     - Check you're using a supported OpenAI model
     
@@ -112,7 +112,7 @@ Visit [status.openfiles.ai](https://status.openfiles.ai) to check service status
 
 <CodeGroup>
 ```typescript TypeScript
-import { OpenFilesClient } from '@openfiles/sdk/core'
+import { OpenFilesClient } from '@openfiles-ai/sdk/core'
 
 const client = new OpenFilesClient({ 
   apiKey: 'oa-...' 
@@ -128,7 +128,7 @@ try {
 ```
 
 ```python Python
-from openfiles import OpenFilesClient
+from openfiles_ai import OpenFilesClient
 
 client = OpenFilesClient(api_key='oa-...')
 

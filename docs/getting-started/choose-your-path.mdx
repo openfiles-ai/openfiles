@@ -5,12 +5,12 @@ description: 'Select the integration method that matches your current setup and 
 
 ## Decision Matrix
 
-| Your Setup | Choose This | Setup Time |
-|------------|-------------|------------|
-| Using OpenAI SDK | **OpenAI Integration** | 2 minutes |
-| Using AI frameworks (OpenAI, Claude, Gemini) | **Tools** | 5 minutes |
-| No AI framework | **Core Client** | 5 minutes |
-| Custom backend | **REST API** | 5 minutes |
+| Your Current Setup | Recommended Path | Why Choose This | Setup Time |
+|-------------------|------------------|-----------------|------------|
+| **Already using OpenAI SDK** | **OpenAI Integration** | Drop-in replacement, minimal changes | 2 minutes |
+| **Using other AI providers** (Claude, Gemini, Cohere, etc.) | **Tools Integration** | Framework-agnostic, works with any AI | 5 minutes |
+| **No AI framework** or want direct control | **Core Client** | Full control, no AI dependencies | 5 minutes |
+| **Building custom API** or prefer REST calls | **REST API** | Maximum flexibility, any language | 5 minutes |
 
 ## Integration Options
 
@@ -20,7 +20,7 @@ description: 'Select the integration method that matches your current setup and 
 
 <CodeGroup>
 ```typescript TypeScript
-import OpenAI from '@openfiles/sdk/openai'  // Change this line
+import OpenAI from '@openfiles-ai/sdk/openai'  // Change this line
 
 const ai = new OpenAI({
   apiKey: 'sk-...',
@@ -30,7 +30,7 @@ const ai = new OpenAI({
 ```
 
 ```python Python
-from openfiles import OpenAI  # Change this line
+from openfiles_ai import OpenAI  # Change this line
 
 ai = OpenAI(
     api_key='sk-...',
@@ -53,7 +53,7 @@ ai = OpenAI(
 
 <CodeGroup>
 ```typescript TypeScript
-import { createOpenFilesTools } from '@openfiles/sdk/tools'
+import { createOpenFilesTools } from '@openfiles-ai/sdk/tools'
 
 const tools = createOpenFilesTools({ apiKey: 'oa-...' })
 
@@ -69,7 +69,7 @@ await tools.handleToolCalls(response.tool_calls)
 ```
 
 ```python Python
-from openfiles.tools import create_openfiles_tools
+from openfiles_ai.tools import create_openfiles_tools
 
 tools = create_openfiles_tools(api_key='oa-...')
 
@@ -99,7 +99,7 @@ await tools.handle_tool_calls(response.tool_calls)
 
 <CodeGroup>
 ```typescript TypeScript
-import { OpenFilesClient } from '@openfiles/sdk/core'
+import { OpenFilesClient } from '@openfiles-ai/sdk/core'
 
 const client = new OpenFilesClient({ apiKey: 'oa-...' })
 
@@ -109,7 +109,7 @@ const content = await client.readFile({ path: 'report.md' })
 ```
 
 ```python Python
-from openfiles import OpenFilesClient
+from openfiles_ai import OpenFilesClient
 
 client = OpenFilesClient(api_key='oa-...')
 
@@ -127,14 +127,14 @@ content = await client.read_file(path='report.md')
 **REST API Example:**
 ```bash
 # Create a file
-curl -X POST https://api.openfiles.com/files \
-  -H "Authorization: Bearer oa_your_key" \
+curl -X POST https://api.openfiles.ai/functions/v1/api/files \
+  -H "x-api-key: oa_your_key" \
   -H "Content-Type: application/json" \
   -d '{"path": "report.md", "content": "Hello World"}'
 
 # Read a file
-curl https://api.openfiles.com/files/report.md \
-  -H "Authorization: Bearer oa_your_key"
+curl https://api.openfiles.ai/functions/v1/api/files/report.md \
+  -H "x-api-key: oa_your_key"
 ```
 
 [Core Client Guide →](/guides/core-client) | [API Reference →](/api-reference)

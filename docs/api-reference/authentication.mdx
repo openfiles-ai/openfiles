@@ -1,11 +1,7 @@
 ---
 title: 'Authentication'
-description: 'Learn how to authenticate with the OpenFiles API'
+description: 'OpenFiles uses API keys for secure access to your files.'
 ---
-
-# Authentication
-
-OpenFiles uses API keys and JWT tokens for secure access to your files.
 
 ## API Key Authentication
 
@@ -14,19 +10,19 @@ Most file operations use API key authentication via the `x-api-key` header.
 ### Getting Your API Key
 
 1. **Sign up** at [console.openfiles.ai](https://console.openfiles.ai)
-2. **Navigate to Settings** in your console
-3. **Generate API Key** - Copy your key (starts with `oa_`)
+2. **Navigate to API Keys** in your console
+3. **Create API Key** - Copy your key (starts with `oa_`)
 
 ### Using Your API Key
 
 <CodeGroup>
 ```bash cURL
-curl -X GET "https://api.openfiles.ai/files" \
+curl -X GET "https://api.openfiles.ai/functions/v1/api/files" \
   -H "x-api-key: oa_your_api_key_here"
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://api.openfiles.ai/files', {
+const response = await fetch('https://api.openfiles.ai/functions/v1/api/files', {
   headers: {
     'x-api-key': 'oa_your_api_key_here'
   }
@@ -40,28 +36,7 @@ headers = {
     'x-api-key': 'oa_your_api_key_here'
 }
 
-response = requests.get('https://api.openfiles.ai/files', headers=headers)
-```
-</CodeGroup>
-
-## JWT Token Authentication 
-
-Project management endpoints use JWT Bearer tokens from your console session.
-
-### Using JWT Tokens
-
-<CodeGroup>
-```bash cURL
-curl -X GET "https://api.openfiles.ai/project" \
-  -H "Authorization: Bearer your_jwt_token"
-```
-
-```javascript JavaScript
-const response = await fetch('https://api.openfiles.ai/project', {
-  headers: {
-    'Authorization': 'Bearer your_jwt_token'
-  }
-})
+response = requests.get('https://api.openfiles.ai/functions/v1/api/files', headers=headers)
 ```
 </CodeGroup>
 

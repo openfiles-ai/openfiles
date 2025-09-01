@@ -40,8 +40,8 @@
       "group": "Getting Started",
       "pages": [
         "getting-started/introduction",
-        "getting-started/quickstart",
-        "getting-started/choose-your-path"
+        "getting-started/choose-your-path",
+        "getting-started/quickstart"
       ]
     },
     {
@@ -74,18 +74,11 @@
           ]
         },
         {
-          "group": "Project",
-          "pages": [
-            "api-reference/project/get-project-info",
-            "api-reference/project/regenerate-api-key"
-          ]
-        },
-        {
           "group": "Files",
           "pages": [
-            "api-reference/files/list-files",
             "api-reference/files/write-file",
             "api-reference/files/read-file-or-get-metadata",
+            "api-reference/files/list-files",
             "api-reference/files/edit-file-with-string-replacement",
             "api-reference/files/append-content-to-file",
             "api-reference/files/overwrite-file-content-completely"
@@ -103,6 +96,6 @@
     "raiseIssue": true
   },
   "api": {
-    "baseUrl": "https://api.openfiles.com/functions/v1/api"
+    "baseUrl": "https://api.openfiles.ai/functions/v1/api"
   }
 }

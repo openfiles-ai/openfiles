@@ -19,10 +19,10 @@ Adds new content to the end of an existing file without replacing the original c
 
 <CodeGroup>
 ```javascript JavaScript
-const response = await fetch('https://api.openfiles.com/files/append/logs/app.log', {
+const response = await fetch('https://api.openfiles.ai/functions/v1/api/files/append/logs/app.log', {
   method: 'PUT',
   headers: {
-    'Authorization': `Bearer ${API_KEY}`,
+    'x-api-key': API_KEY,
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -35,15 +35,15 @@ const response = await fetch('https://api.openfiles.com/files/append/logs/app.lo
 import requests
 
 response = requests.put(
-    'https://api.openfiles.com/files/append/logs/app.log',
-    headers={'Authorization': f'Bearer {API_KEY}'},
+    'https://api.openfiles.ai/functions/v1/api/files/append/logs/app.log',
+    headers={'x-api-key': API_KEY},
     json={'content': '\n2024-01-15 10:30:00 INFO User login successful'}
 )
 ```
 
 ```bash cURL
-curl -X PUT 'https://api.openfiles.com/files/append/logs/app.log' \
-  -H 'Authorization: Bearer YOUR_API_KEY' \
+curl -X PUT 'https://api.openfiles.ai/functions/v1/api/files/append/logs/app.log' \
+  -H 'x-api-key: YOUR_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "content": "\n2024-01-15 10:30:00 INFO User login successful"

@@ -19,7 +19,7 @@ All our examples are available in our GitHub repository:
 
 <CodeGroup>
 ```typescript TypeScript
-import OpenAI from '@openfiles/sdk/openai'
+import OpenAI from '@openfiles-ai/sdk/openai'
 
 const ai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -49,7 +49,7 @@ console.log(result)
 ```
 
 ```python Python
-from openfiles import OpenAI
+from openfiles_ai import OpenAI
 import os
 
 ai = OpenAI(
@@ -83,7 +83,7 @@ print(result)
 
 <CodeGroup>
 ```typescript TypeScript
-import { OpenFilesClient } from '@openfiles/sdk/core'
+import { OpenFilesClient } from '@openfiles-ai/sdk/core'
 
 const client = new OpenFilesClient({ 
   apiKey: process.env.OPENFILES_API_KEY 
@@ -114,7 +114,7 @@ await client.writeFile({
 ```
 
 ```python Python
-from openfiles import OpenFilesClient
+from openfiles_ai import OpenFilesClient
 
 client = OpenFilesClient(
     api_key=os.getenv('OPENFILES_API_KEY')

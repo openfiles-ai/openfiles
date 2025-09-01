@@ -315,7 +315,6 @@ The platform has **comprehensive core functionality** ready for production, incl
 
 **Authentication Methods:**
 - **API Key**: Add `x-api-key: oa_your_key_here` header
-- **JWT**: Add `Authorization: Bearer your_jwt_token` header
 
 ## 🏗️ Architecture
 

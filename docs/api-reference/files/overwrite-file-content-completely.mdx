@@ -19,10 +19,10 @@ Replaces the entire content of an existing file with new content. The file must 
 
 <CodeGroup>
 ```javascript JavaScript
-const response = await fetch('https://api.openfiles.com/files/overwrite/config/settings.json', {
+const response = await fetch('https://api.openfiles.ai/functions/v1/api/files/overwrite/config/settings.json', {
   method: 'PUT',
   headers: {
-    'Authorization': `Bearer ${API_KEY}`,
+    'x-api-key': API_KEY,
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -46,15 +46,15 @@ new_config = {
 }
 
 response = requests.put(
-    'https://api.openfiles.com/files/overwrite/config/settings.json',
-    headers={'Authorization': f'Bearer {API_KEY}'},
+    'https://api.openfiles.ai/functions/v1/api/files/overwrite/config/settings.json',
+    headers={'x-api-key': API_KEY},
     json={'content': json.dumps(new_config, indent=2)}
 )
 ```
 
 ```bash cURL
-curl -X PUT 'https://api.openfiles.com/files/overwrite/config/settings.json' \
-  -H 'Authorization: Bearer YOUR_API_KEY' \
+curl -X PUT 'https://api.openfiles.ai/functions/v1/api/files/overwrite/config/settings.json' \
+  -H 'x-api-key: YOUR_API_KEY' \
   -H 'Content-Type: application/json' \
   -d '{
     "content": "{\n  \"version\": \"2.0\",\n  \"theme\": \"dark\",\n  \"notifications\": true\n}"

@@ -5,16 +5,15 @@ description: 'OpenFiles provides file operations for AI agents through SDKs and 
 
 OpenFiles integrates with your AI application through three approaches:
 
-1. **Drop-in SDKs** - Direct replacement for OpenAI SDK and other AI frameworks
+1. **Direct Integrations** - Direct replacement for OpenAI SDK and other AI frameworks
 2. **Tools** - Framework-agnostic tool definitions for any AI provider
 3. **Core SDK & REST API** - Direct file operations without AI dependencies
 
 
 ## File Storage
 
-- **Paths**: S3-style paths without leading slashes (`docs/readme.md`)
+- **Paths**: Specify paths without a leading slash (`docs/readme.md`)
 - **Versioning**: Automatic version tracking for all changes
-- **Formats**: Text, JSON, CSV, Markdown, and other text-based formats
 - **Size Limit**: 10MB per file operation
 
 ## Authentication
@@ -29,10 +28,10 @@ export OPENFILES_API_KEY="oa_your_key_here"
 ## Next Steps
 
 <CardGroup cols={2}>
-  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
-    Set up your first file operation in 2 minutes
-  </Card>
   <Card title="Choose Integration" icon="code" href="/getting-started/choose-your-path">
     Select the right approach for your application
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
+    Set up your first file operation in 2 minutes
   </Card>
 </CardGroup>
