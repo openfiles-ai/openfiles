@@ -260,7 +260,7 @@ class OpenFilesTools:
                             "maximum": 100,
                         },
                     },
-                    "required": ["directory", "limit"],
+                    "required": ["directory", "recursive", "limit"],
                     "additionalProperties": False,
                 },
             ),
