@@ -2,10 +2,10 @@
   "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
   "changelog": ["@changesets/changelog-github", { "repo": "openfiles-ai/openfiles" }],
   "commit": false,
-  "fixed": [],
+  "fixed": [["@openfiles-ai/sdk", "openfiles-ai"]],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@openfiles-ai/python-sdk"]
+  "ignore": []
 }

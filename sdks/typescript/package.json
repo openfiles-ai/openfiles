@@ -19,13 +19,10 @@
     "dev": "tsc --watch",
     "prebuild": "node scripts/prebuild.js",
     "test": "vitest run",
-    "test:unit": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src/**/*.ts",
     "check-types": "tsc --noEmit",
-    "clean": "rm -rf dist",
-    "publish": "npm publish",
-    "publish:dry-run": "npm publish --dry-run"
+    "clean": "rm -rf dist"
   },
   "keywords": [
     "openfiles",

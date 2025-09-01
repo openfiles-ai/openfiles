@@ -7,10 +7,7 @@
     "lint": "poetry run ruff check . && poetry run black --check .",
     "check-types": "poetry run mypy openfiles_ai",
     "clean": "rm -rf dist build *.egg-info",
-    "publish": "poetry build && poetry publish",
-    "publish:dry-run": "poetry build && poetry publish --dry-run",
-    "dev": "echo 'Python SDK - Use poetry commands for development'",
-    "version": "echo 'Version managed in pyproject.toml - edit manually or use poetry version'"
+    "dev": "echo 'Python SDK - Use poetry commands for development'"
   },
   "engines": {
     "node": ">=18"
