@@ -7,7 +7,11 @@
     "lint": "poetry run ruff check . && poetry run black --check .",
     "check-types": "poetry run mypy openfiles_ai",
     "clean": "rm -rf dist build *.egg-info",
-    "dev": "echo 'Python SDK - Use poetry commands for development'"
+    "dev": "echo 'Python SDK - Use poetry commands for development'",
+    "release": "poetry version patch && poetry publish --build",
+    "release:minor": "poetry version minor && poetry publish --build",
+    "release:major": "poetry version major && poetry publish --build",
+    "release:dry": "poetry publish --build --dry-run"
   },
   "engines": {
     "node": ">=18"

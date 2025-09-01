@@ -1,6 +1,6 @@
 # OpenFiles SDK Release Process
 
-This document outlines the release process for OpenFiles SDKs (TypeScript and Python).
+This document outlines the **decentralized release process** for OpenFiles SDKs (TypeScript and Python). Each SDK manages its own releases independently, following industry best practices.
 
 ## Prerequisites
 
@@ -9,69 +9,60 @@ This document outlines the release process for OpenFiles SDKs (TypeScript and Py
 - **Git Access**: Push rights to the main repository
 - **Clean Working Directory**: No uncommitted changes
 
-## Release Commands
+## 🚀 TypeScript SDK Release (`sdks/typescript/`)
 
-### 🚀 Full Release (Recommended)
-
+### Quick Release
 ```bash
-# Complete release process for both SDKs
+cd sdks/typescript
 pnpm release
 ```
 
-This command will:
-1. Run CI checks (build, test, lint)
-2. Update versions using changesets
-3. Publish TypeScript SDK to NPM
-4. Publish Python SDK to PyPI
-5. Push changes and tags to GitHub
-
-### 🧪 Dry Run (Test Release)
-
+### Manual Process
 ```bash
-# Test the release without publishing
+cd sdks/typescript
+
+# 1. Create changeset
+pnpm changeset
+
+# 2. Version and publish
+pnpm changeset:version
+pnpm changeset:publish
+
+# 3. Push changes
+git push --follow-tags
+```
+
+### Dry Run
+```bash
+cd sdks/typescript
 pnpm release:dry
 ```
 
-### 📝 Manual Step-by-Step Process
+## 🐍 Python SDK Release (`sdks/python/`)
 
-#### Step 1: Create a Changeset
-
+### Patch Release (Bug fixes)
 ```bash
-pnpm changeset
+cd sdks/python
+pnpm release        # Auto-increments patch version
 ```
 
-- Select packages that changed
-- Choose version bump type (patch/minor/major)
-- Write a description of changes
-
-#### Step 2: Version Packages
-
+### Minor Release (New features)
 ```bash
-pnpm release:version
+cd sdks/python
+pnpm release:minor
 ```
 
-- Updates package versions
-- Generates CHANGELOG entries
-- Creates version commit
-
-#### Step 3: Publish Packages
-
+### Major Release (Breaking changes)
 ```bash
-pnpm release:publish
+cd sdks/python
+pnpm release:major
 ```
 
-- Publishes TypeScript SDK to NPM
-- Publishes Python SDK to PyPI
-- Creates git tags
-
-#### Step 4: Push to GitHub
-
+### Dry Run
 ```bash
-pnpm release:push
+cd sdks/python
+pnpm release:dry
 ```
-
-- Pushes commits to main branch
-- Pushes version tags
 
 ## Version Strategy
 
