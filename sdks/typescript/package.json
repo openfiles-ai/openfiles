@@ -23,11 +23,13 @@
     "lint": "eslint src/**/*.ts",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "release": "pnpm changeset && pnpm changeset:version && pnpm changeset:publish",
-    "release:dry": "npm publish --dry-run",
-    "changeset": "changeset",
-    "changeset:version": "changeset version",
-    "changeset:publish": "changeset publish"
+    "release": "pnpm release:changeset && pnpm release:version && pnpm release:publish && pnpm release:push",
+    "release:changeset": "changeset",
+    "release:version": "changeset version",
+    "release:publish": "pnpm build && changeset publish",
+    "release:push": "git push --follow-tags",
+    "release:dry": "pnpm build && npm publish --dry-run",
+    "release:status": "changeset status --verbose"
   },
   "keywords": [
     "openfiles",

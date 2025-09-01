@@ -11,57 +11,86 @@ This document outlines the **decentralized release process** for OpenFiles SDKs 
 
 ## 🚀 TypeScript SDK Release (`sdks/typescript/`)
 
-### Quick Release
+### 🎯 Complete Release (Recommended)
 ```bash
 cd sdks/typescript
-pnpm release
+pnpm release  # changeset → version → publish → push
 ```
 
-### Manual Process
+### ⚛️ Atomic Steps
 ```bash
 cd sdks/typescript
 
-# 1. Create changeset
-pnpm changeset
+# Step 1: Create changeset
+pnpm release:changeset
 
-# 2. Version and publish
-pnpm changeset:version
-pnpm changeset:publish
+# Step 2: Update version
+pnpm release:version
 
-# 3. Push changes
-git push --follow-tags
+# Step 3: Build and publish 
+pnpm release:publish
+
+# Step 4: Push to git
+pnpm release:push
+
+# Check status anytime
+pnpm release:status
 ```
 
-### Dry Run
+### 🧪 Testing
 ```bash
 cd sdks/typescript
-pnpm release:dry
+pnpm release:dry  # Test publish without releasing
 ```
 
 ## 🐍 Python SDK Release (`sdks/python/`)
 
-### Patch Release (Bug fixes)
+### 🎯 Complete Release
+
+**Patch Release (Bug fixes):**
 ```bash
 cd sdks/python
-pnpm release        # Auto-increments patch version
+pnpm release  # version patch → build → publish → push
 ```
 
-### Minor Release (New features)
+**Minor Release (New features):**
 ```bash
 cd sdks/python
-pnpm release:minor
+pnpm release:minor  # version minor → build → publish → push
 ```
 
-### Major Release (Breaking changes)
+**Major Release (Breaking changes):**
 ```bash
 cd sdks/python
-pnpm release:major
+pnpm release:major  # version major → build → publish → push
 ```
 
-### Dry Run
+### ⚛️ Atomic Steps
 ```bash
 cd sdks/python
-pnpm release:dry
+
+# Step 1: Update version
+pnpm release:version:patch   # or :minor or :major
+pnpm release:version:minor
+pnpm release:version:major
+
+# Step 2: Build package
+pnpm release:build
+
+# Step 3: Publish to PyPI
+pnpm release:publish
+
+# Step 4: Commit version and push
+pnpm release:push
+
+# Check current version
+pnpm release:status
+```
+
+### 🧪 Testing
+```bash
+cd sdks/python
+pnpm release:dry  # Test publish without releasing
 ```
 
 ## Version Strategy

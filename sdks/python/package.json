@@ -8,10 +8,17 @@
     "check-types": "poetry run mypy openfiles_ai",
     "clean": "rm -rf dist build *.egg-info",
     "dev": "echo 'Python SDK - Use poetry commands for development'",
-    "release": "poetry version patch && poetry publish --build",
-    "release:minor": "poetry version minor && poetry publish --build",
-    "release:major": "poetry version major && poetry publish --build",
-    "release:dry": "poetry publish --build --dry-run"
+    "release": "pnpm release:version:patch && pnpm release:build && pnpm release:publish && pnpm release:push",
+    "release:minor": "pnpm release:version:minor && pnpm release:build && pnpm release:publish && pnpm release:push",
+    "release:major": "pnpm release:version:major && pnpm release:build && pnpm release:publish && pnpm release:push",
+    "release:version:patch": "poetry version patch",
+    "release:version:minor": "poetry version minor", 
+    "release:version:major": "poetry version major",
+    "release:build": "pnpm build",
+    "release:publish": "poetry publish",
+    "release:push": "git add pyproject.toml && git commit -m \"chore: bump python sdk version\" && git push",
+    "release:dry": "pnpm build && poetry publish --dry-run",
+    "release:status": "echo \"Python SDK version: $(poetry version -s)\""
   },
   "engines": {
     "node": ">=18"
