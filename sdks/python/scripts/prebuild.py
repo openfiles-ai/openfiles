@@ -65,7 +65,7 @@ def main() -> None:
     
     if not local_spec_path.exists():
         print("📦 No local spec found, trying OpenAPI package...")
-        package_spec_path = project_root.parent / "openapi/dist/openapi.json"
+        package_spec_path = project_root.parent / "openapi/dist/sdk-openapi.json"
         
         if package_spec_path.exists():
             spec_path = package_spec_path

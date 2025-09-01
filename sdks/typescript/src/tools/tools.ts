@@ -470,11 +470,14 @@ export class OpenFilesTools {
         })
 
       case 'list_files':
-        return await this.client.listFiles({
+        const listParams: any = {
           directory: args.directory,
-          recursive: args.recursive,
           limit: args.limit
-        })
+        }
+        if (args.recursive !== undefined) {
+          listParams.recursive = args.recursive
+        }
+        return await this.client.listFiles(listParams)
 
       case 'append_to_file':
         return await this.client.appendToFile({

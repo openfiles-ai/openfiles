@@ -12,8 +12,8 @@ const docsDir = path.join(__dirname, '..');
 
 async function prebuildDocs() {
   // Use default URL or override with environment variable
-  const OPENFILES_OPENAPI_URL = process.env.OPENFILES_OPENAPI_URL || 'https://api.openfiles.ai/functions/v1/api/openapi.json';
-  const targetSpec = path.join(docsDir, 'openapi.json');
+  const OPENFILES_OPENAPI_URL = process.env.OPENFILES_OPENAPI_URL || 'https://api.openfiles.ai/functions/v1/api/sdk-openapi.json';
+  const targetSpec = path.join(docsDir, 'sdk-openapi.json');
   
   if (OPENFILES_OPENAPI_URL) {
     try {
@@ -33,14 +33,14 @@ async function prebuildDocs() {
       
     } catch (error) {
       console.log('⚠️  Failed to fetch OpenAPI spec:', error.message);
-      console.log('📄 Continuing with existing openapi.json file');
+      console.log('📄 Continuing with existing sdk-openapi.json file');
     }
   }
   
   // Verify we have a valid spec file
   if (!fs.existsSync(targetSpec)) {
-    console.error('❌ No openapi.json file found and unable to fetch from URL');
-    console.error('💡 Either set OPENFILES_OPENAPI_URL or ensure openapi.json exists');
+    console.error('❌ No sdk-openapi.json file found and unable to fetch from URL');
+    console.error('💡 Either set OPENFILES_OPENAPI_URL or ensure sdk-openapi.json exists');
     process.exit(1);
   }
   
@@ -49,7 +49,7 @@ async function prebuildDocs() {
     const spec = JSON.parse(fs.readFileSync(targetSpec, 'utf8'));
     console.log(`🎯 Using spec with ${Object.keys(spec.paths || {}).length} endpoints`);
   } catch (error) {
-    console.error('❌ Invalid JSON in openapi.json:', error.message);
+    console.error('❌ Invalid JSON in sdk-openapi.json:', error.message);
     process.exit(1);
   }
   

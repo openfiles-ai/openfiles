@@ -1,18 +1,22 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "OpenFiles API",
-    "description": "AI-native file storage platform with S3-style operations, version control, and semantic search.",
+    "title": "OpenFiles SDK API",
+    "description": "AI-native file storage platform with create, read, write operations, version control, and semantic search.",
     "version": "2.0.0",
     "contact": {
       "name": "OpenFiles Support",
-      "url": "https://openfiles.com"
+      "url": "https://openfiles.ai"
     }
   },
   "servers": [
     {
       "url": "https://api.openfiles.ai/functions/v1/api",
       "description": "Production"
+    },
+    {
+      "url": "http://localhost:54321/functions/v1/api",
+      "description": "Local Development"
     }
   ],
   "paths": {
@@ -22,6 +26,7 @@
         "tags": [
           "System"
         ],
+        "description": "Check if the API service is running",
         "operationId": "healthCheck",
         "security": [],
         "responses": {
@@ -38,71 +43,13 @@
         }
       }
     },
-    "/project": {
-      "get": {
-        "summary": "Get project info",
-        "tags": [
-          "Project"
-        ],
-        "operationId": "getProject",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProjectResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          }
-        }
-      }
-    },
-    "/project/apikey/regenerate": {
-      "post": {
-        "summary": "Regenerate API key",
-        "tags": [
-          "Project"
-        ],
-        "operationId": "regenerateApiKey",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthorized"
-          }
-        }
-      }
-    },
     "/files": {
       "get": {
         "summary": "List files in a directory",
-        "description": "List files in a specific directory. When called on the root directory ('/'), this only returns files in the root directory and excludes files in subdirectories. To see all files across all directories, use `?recursive=true` parameter.",
         "tags": [
           "Files"
         ],
+        "description": "List files in a specific directory. When called on the root directory ('/'), this only returns files in the root directory and excludes files in subdirectories. To see all files across all directories, use `?recursive=true` parameter.",
         "operationId": "listFiles",
         "security": [
           {
@@ -250,6 +197,7 @@
         "tags": [
           "Files"
         ],
+        "description": "Create a new file or new version of existing file",
         "operationId": "writeFile",
         "security": [
           {
@@ -295,6 +243,7 @@
         "tags": [
           "Files"
         ],
+        "description": "Read file content, get metadata, or list versions",
         "operationId": "readFile",
         "security": [
           {
@@ -308,7 +257,9 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "File path (S3-style, no leading slash)",
+            "example": "src/index.js"
           },
           {
             "name": "version",
@@ -316,7 +267,8 @@
             "schema": {
               "type": "integer",
               "minimum": 1
-            }
+            },
+            "description": "Specific version to read"
           },
           {
             "name": "metadata",
@@ -326,7 +278,8 @@
               "enum": [
                 ""
               ]
-            }
+            },
+            "description": "Get file metadata instead of content"
           },
           {
             "name": "versions",
@@ -336,7 +289,8 @@
               "enum": [
                 ""
               ]
-            }
+            },
+            "description": "List all versions of the file"
           },
           {
             "name": "limit",
@@ -346,7 +300,8 @@
               "minimum": 1,
               "maximum": 100,
               "default": 10
-            }
+            },
+            "description": "Limit for versions listing"
           },
           {
             "name": "offset",
@@ -355,7 +310,8 @@
               "type": "integer",
               "minimum": 0,
               "default": 0
-            }
+            },
+            "description": "Offset for versions listing"
           }
         ],
         "responses": {
@@ -394,6 +350,7 @@
         "tags": [
           "Files"
         ],
+        "description": "Edit file content by replacing old string with new string",
         "operationId": "editFile",
         "security": [
           {
@@ -454,6 +411,7 @@
         "tags": [
           "Files"
         ],
+        "description": "Add content to the end of an existing file",
         "operationId": "appendFile",
         "security": [
           {
@@ -514,6 +472,7 @@
         "tags": [
           "Files"
         ],
+        "description": "Replace entire file content with new content",
         "operationId": "overwriteFile",
         "security": [
           {
@@ -571,12 +530,8 @@
       "ApiKeyAuth": {
         "type": "apiKey",
         "in": "header",
-        "name": "x-api-key"
-      },
-      "BearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT"
+        "name": "x-api-key",
+        "description": "API key for authentication. Get your API key from the console."
       }
     },
     "schemas": {
@@ -712,56 +667,6 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
-          }
-        }
-      },
-      "ProjectResponse": {
-        "type": "object",
-        "required": [
-          "success",
-          "data"
-        ],
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid"
-              },
-              "name": {
-                "type": "string"
-              },
-              "userId": {
-                "type": "string",
-                "format": "uuid"
-              }
-            }
-          }
-        }
-      },
-      "ApiKeyResponse": {
-        "type": "object",
-        "required": [
-          "success",
-          "data"
-        ],
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "example": true
-          },
-          "data": {
-            "type": "object",
-            "properties": {
-              "apiKey": {
-                "type": "string"
-              }
-            }
           }
         }
       },
@@ -1039,17 +944,20 @@
             "type": "string",
             "enum": [
               "ok"
-            ]
+            ],
+            "example": "ok"
           },
           "timestamp": {
             "type": "string",
             "format": "date-time"
           },
           "message": {
-            "type": "string"
+            "type": "string",
+            "example": "OpenFiles API"
           },
           "version": {
-            "type": "string"
+            "type": "string",
+            "example": "1.0.0"
           }
         }
       }
@@ -1066,7 +974,7 @@
         }
       },
       "Unauthorized": {
-        "description": "Authentication required",
+        "description": "Authentication required or invalid API key",
         "content": {
           "application/json": {
             "schema": {
@@ -1110,15 +1018,11 @@
   "tags": [
     {
       "name": "System",
-      "description": "System operations"
-    },
-    {
-      "name": "Project",
-      "description": "Project management"
+      "description": "System health and status operations"
     },
     {
       "name": "Files",
-      "description": "File operations"
+      "description": "File storage operations with version control"
     }
   ]
 }

@@ -34,22 +34,6 @@ export type FileMetadata = {
     updatedAt?: string;
 };
 
-export type ProjectResponse = {
-    success: boolean;
-    data: {
-        id?: string;
-        name?: string;
-        userId?: string;
-    };
-};
-
-export type ApiKeyResponse = {
-    success: boolean;
-    data: {
-        apiKey?: string;
-    };
-};
-
 export type FileOperationResponse = {
     success: boolean;
     data: FileMetadata;
@@ -148,56 +132,6 @@ export type HealthCheckResponses = {
 
 export type HealthCheckResponse = HealthCheckResponses[keyof HealthCheckResponses];
 
-export type GetProjectData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/project';
-};
-
-export type GetProjectErrors = {
-    /**
-     * Authentication required
-     */
-    401: ErrorResponse;
-};
-
-export type GetProjectError = GetProjectErrors[keyof GetProjectErrors];
-
-export type GetProjectResponses = {
-    /**
-     * Success
-     */
-    200: ProjectResponse;
-};
-
-export type GetProjectResponse = GetProjectResponses[keyof GetProjectResponses];
-
-export type RegenerateApiKeyData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/project/apikey/regenerate';
-};
-
-export type RegenerateApiKeyErrors = {
-    /**
-     * Authentication required
-     */
-    401: ErrorResponse;
-};
-
-export type RegenerateApiKeyError = RegenerateApiKeyErrors[keyof RegenerateApiKeyErrors];
-
-export type RegenerateApiKeyResponses = {
-    /**
-     * Success
-     */
-    200: ApiKeyResponse;
-};
-
-export type RegenerateApiKeyResponse = RegenerateApiKeyResponses[keyof RegenerateApiKeyResponses];
-
 export type ListFilesData = {
     body?: never;
     path?: never;
@@ -227,7 +161,7 @@ export type ListFilesData = {
 
 export type ListFilesErrors = {
     /**
-     * Authentication required
+     * Authentication required or invalid API key
      */
     401: ErrorResponse;
 };
@@ -256,7 +190,7 @@ export type WriteFileErrors = {
      */
     400: ErrorResponse;
     /**
-     * Authentication required
+     * Authentication required or invalid API key
      */
     401: ErrorResponse;
     /**
@@ -279,13 +213,31 @@ export type WriteFileResponse = WriteFileResponses[keyof WriteFileResponses];
 export type ReadFileData = {
     body?: never;
     path: {
+        /**
+         * File path (S3-style, no leading slash)
+         */
         path: string;
     };
     query?: {
+        /**
+         * Specific version to read
+         */
         version?: number;
+        /**
+         * Get file metadata instead of content
+         */
         metadata?: '';
+        /**
+         * List all versions of the file
+         */
         versions?: '';
+        /**
+         * Limit for versions listing
+         */
         limit?: number;
+        /**
+         * Offset for versions listing
+         */
         offset?: number;
     };
     url: '/files/{path}';
@@ -293,7 +245,7 @@ export type ReadFileData = {
 
 export type ReadFileErrors = {
     /**
-     * Authentication required
+     * Authentication required or invalid API key
      */
     401: ErrorResponse;
     /**
@@ -331,7 +283,7 @@ export type EditFileErrors = {
      */
     400: ErrorResponse;
     /**
-     * Authentication required
+     * Authentication required or invalid API key
      */
     401: ErrorResponse;
     /**
@@ -373,7 +325,7 @@ export type AppendFileErrors = {
      */
     400: ErrorResponse;
     /**
-     * Authentication required
+     * Authentication required or invalid API key
      */
     401: ErrorResponse;
     /**
@@ -415,7 +367,7 @@ export type OverwriteFileErrors = {
      */
     400: ErrorResponse;
     /**
-     * Authentication required
+     * Authentication required or invalid API key
      */
     401: ErrorResponse;
     /**
@@ -436,5 +388,5 @@ export type OverwriteFileResponses = {
 export type OverwriteFileResponse = OverwriteFileResponses[keyof OverwriteFileResponses];
 
 export type ClientOptions = {
-    baseUrl: 'https://api.openfiles.ai/functions/v1/api' | (string & {});
+    baseUrl: 'https://api.openfiles.ai/functions/v1/api' | 'http://localhost:54321/functions/v1/api' | (string & {});
 };

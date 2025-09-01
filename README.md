@@ -195,7 +195,7 @@ All error responses follow a consistent structure:
 // For local development and testing
 const client = new OpenFilesClient({
   apiKey: 'oa_test123456789012345678901234567890', // Pre-configured test API key
-  baseUrl: 'http://127.0.0.1:54321/functions/v1/api'
+  baseUrl: 'http://localhost:54321/functions/v1/api'
 })
 
 // Test with pre-seeded data
@@ -295,7 +295,7 @@ The platform has **comprehensive core functionality** ready for production, incl
 - ✅ **Cross-Agent File Sharing** - Multiple AI agents can collaborate on shared files
 
 ### API Endpoints
-**Base URL**: `http://127.0.0.1:54321/functions/v1/api` (local) | `https://your-project.supabase.co/functions/v1/api` (hosted)
+**Base URL**: `http://localhost:54321/functions/v1/api` (local) | `https://your-project.supabase.co/functions/v1/api` (hosted)
 
 | Endpoint | Method | Description | Authentication |
 |----------|--------|-------------|----------------|
@@ -427,7 +427,7 @@ oa_test123456789012345678901234567890
 ```bash
 # Test basic API functionality
 curl -H "x-api-key: oa_test123456789012345678901234567890" \
-  http://127.0.0.1:54321/functions/v1/api/files
+  http://localhost:54321/functions/v1/api/files
 
 # Run comprehensive API tests
 ./tests/run-api-tests.sh
@@ -449,7 +449,7 @@ node -e "
 const { OpenFilesClient } = require('./dist/core/index.js');
 const client = new OpenFilesClient({
   apiKey: 'oa_test123456789012345678901234567890',
-  baseUrl: 'http://127.0.0.1:54321/functions/v1/api'
+  baseUrl: 'http://localhost:54321/functions/v1/api'
 });
 client.listFiles().then(console.log);
 "

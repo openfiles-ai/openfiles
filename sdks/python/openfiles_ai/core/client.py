@@ -257,7 +257,9 @@ class OpenFilesClient:
         if not resolved_dir:
             resolved_dir = ""
 
-        params = {"directory": resolved_dir, "recursive": str(recursive).lower(), "limit": str(limit), "offset": str(offset)}
+        params = {"directory": resolved_dir, "limit": str(limit), "offset": str(offset)}
+        if recursive:
+            params["recursive"] = "true"
 
         try:
             response = await self._client.get("/files", params=params)

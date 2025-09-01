@@ -146,7 +146,7 @@ supabase start
 supabase functions serve
 ```
 
-Then set `OPENFILES_BASE_URL=http://127.0.0.1:54321/functions/v1/api` in your `.env` files.
+Then set `OPENFILES_BASE_URL=http://localhost:54321/functions/v1/api` in your `.env` files.
 
 ## Troubleshooting
 

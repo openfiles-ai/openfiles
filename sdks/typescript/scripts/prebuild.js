@@ -52,7 +52,7 @@ async function prebuildTypeScriptSDK() {
   
   if (!existsSync(localSpecPath)) {
     console.log('📦 No local spec found, trying OpenAPI package...')
-    const packageSpecPath = resolve(packageRoot, '../openapi/dist/openapi.json')
+    const packageSpecPath = resolve(packageRoot, '../openapi/dist/sdk-openapi.json')
     
     if (existsSync(packageSpecPath)) {
       specPath = packageSpecPath

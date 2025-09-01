@@ -455,14 +455,18 @@ export class OpenFilesClient {
       logger.debug(`Listing files in: ${resolvedDirectory}`)
 
       try {
+        const query: any = {
+          directory: resolvedDirectory,
+          limit: params.limit || 10,
+          offset: params.offset || 0
+        }
+        if (params.recursive !== undefined) {
+          query.recursive = params.recursive
+        }
+        
         const response = await _listFiles({
           client: this.client,
-          query: {
-            directory: resolvedDirectory,
-            recursive: params.recursive,
-            limit: params.limit || 10,
-            offset: params.offset || 0
-          }
+          query
         })
 
         if (!response.data?.success || !response.data?.data) {

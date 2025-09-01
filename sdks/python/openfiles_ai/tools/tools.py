@@ -505,12 +505,14 @@ class OpenFilesTools:
             )
 
         elif tool_call.function["name"] == "list_files":
-            return await self.client.list_files(
-                directory=args["directory"], 
-                recursive=args.get("recursive", False),
-                limit=args["limit"], 
-                base_path=self.base_path
-            )
+            kwargs = {
+                "directory": args["directory"],
+                "limit": args["limit"],
+                "base_path": self.base_path
+            }
+            if "recursive" in args:
+                kwargs["recursive"] = args["recursive"]
+            return await self.client.list_files(**kwargs)
 
         elif tool_call.function["name"] == "append_to_file":
             return await self.client.append_file(
