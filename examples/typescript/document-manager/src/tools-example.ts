@@ -33,10 +33,8 @@ async function toolsIntegrationExample() {
     basePath: sessionPaths.toolsTest  // All AI-generated files organized under session
   })
 
-  // Create scoped tools for different departments with session isolation
-  const salesTools = new OpenFilesTools(client, 'sales-dept')
-  const dataTools = new OpenFilesTools(client, 'data-analytics')
-  const tools = new OpenFilesTools(client)  // Main tools for general use
+  // Create single unified tool for consistent basePath context
+  const projectTools = new OpenFilesTools(client)  // Single tool for entire conversation
   const startTime = Date.now()
   let operationsCompleted = 0
 
@@ -46,7 +44,7 @@ async function toolsIntegrationExample() {
   const model = 'gpt-4o-mini'
 
   console.log(`🔧 Mode: ${useAI ? 'AI-powered' : 'Manual execution'}`)
-  console.log(`🛠️  Available tools: ${tools.definitions.length}`)
+  console.log(`🛠️  Available tools: ${projectTools.openai.definitions.length}`)
 
   try {
     if (openai) {
@@ -62,19 +60,19 @@ async function toolsIntegrationExample() {
       console.log('💬 User: "Create a sales report for January 2024 with our key metrics"')
       conversation.push({
         role: 'user',
-        content: 'Create a sales report for January 2024. Include revenue of $125,000, 42 new customers, top regions (North America, Europe), and next month goals. Save it as january-2024-sales.md'
+        content: 'Create a sales report for January 2024. Include revenue of $125,000, 42 new customers, top regions (North America, Europe), and next month goals. Save it in the sales department folder as january-2024-sales.md'
       })
 
       const reportResponse = await openai.chat.completions.create({
         model,
         messages: conversation,
-        tools: salesTools.definitions,  // Using sales department tools
+        tools: projectTools.openai.definitions,  // Using unified project tools
         temperature: 0.3,
         parallel_tool_calls: false  // Ensure sequential execution
       })
 
       // Process tools and get tool messages
-      const reportProcessed = await salesTools.processToolCalls(reportResponse)
+      const reportProcessed = await projectTools.openai.processToolCalls(reportResponse)
       
       if (reportProcessed.handled) {
         console.log('✅ Sales report created at ai-workspace/sales-dept/january-2024-sales.md')
@@ -97,12 +95,12 @@ async function toolsIntegrationExample() {
       const listResponse = await openai.chat.completions.create({
         model,
         messages: conversation,
-        tools: tools.definitions,
+        tools: projectTools.openai.definitions,
         temperature: 0.1,
         parallel_tool_calls: false
       })
 
-      const listProcessed = await tools.processToolCalls(listResponse)
+      const listProcessed = await projectTools.openai.processToolCalls(listResponse)
       if (listProcessed.handled) {
         console.log('✅ File listing completed')
         operationsCompleted++
@@ -118,18 +116,18 @@ async function toolsIntegrationExample() {
       console.log('💬 User: "Read the sales report and add a customer satisfaction section"')
       conversation.push({
         role: 'user',
-        content: 'Read the file reports/january-2024-sales.md (the exact file we just created) and add a new section called "Customer Satisfaction" with a score of 4.7/5 and key feedback points.'
+        content: 'Read the sales report file we just created and add a new section called "Customer Satisfaction" with a score of 4.7/5 and key feedback points.'
       })
 
       const readEditResponse = await openai.chat.completions.create({
         model,
         messages: conversation,
-        tools: tools.definitions,
+        tools: projectTools.openai.definitions,
         temperature: 0.2,
         parallel_tool_calls: false
       })
 
-      const readEditProcessed = await tools.processToolCalls(readEditResponse)
+      const readEditProcessed = await projectTools.openai.processToolCalls(readEditResponse)
       if (readEditProcessed.handled) {
         console.log('✅ Report updated with satisfaction data')
         operationsCompleted++
@@ -145,18 +143,18 @@ async function toolsIntegrationExample() {
       console.log('💬 User: "Create a customer database with sample data"')
       conversation.push({
         role: 'user',
-        content: 'Create a customer database CSV file with these columns: customer_id, company_name, industry, monthly_revenue, status. Add 8 sample customers with realistic business data. Save as customers.csv'
+        content: 'Create a customer database CSV file with these columns: customer_id, company_name, industry, monthly_revenue, status. Add 8 sample customers with realistic business data. Save it in the data folder as customers.csv'
       })
 
       const customerResponse = await openai.chat.completions.create({
         model,
         messages: conversation,
-        tools: dataTools.definitions,  // Using data analytics tools
+        tools: projectTools.openai.definitions,  // Using unified project tools
         temperature: 0.3,
         parallel_tool_calls: false
       })
 
-      const customerProcessed = await dataTools.processToolCalls(customerResponse)
+      const customerProcessed = await projectTools.openai.processToolCalls(customerResponse)
       if (customerProcessed.handled) {
         console.log('✅ Customer database created at ai-workspace/data-analytics/customers.csv')
         operationsCompleted++
@@ -172,18 +170,18 @@ async function toolsIntegrationExample() {
       console.log('💬 User: "Check the details of our sales report file"')
       conversation.push({
         role: 'user',
-        content: 'Get the file information for reports/january-2024-sales.md (the sales report file we created) - I want to see the version, size, and modification details.'
+        content: 'Get the file information for the sales report file we created - I want to see the version, size, and modification details.'
       })
 
       const metadataResponse = await openai.chat.completions.create({
         model,
         messages: conversation,
-        tools: tools.definitions,
+        tools: projectTools.openai.definitions,
         temperature: 0.1,
         parallel_tool_calls: false
       })
 
-      const metadataProcessed = await tools.processToolCalls(metadataResponse)
+      const metadataProcessed = await projectTools.openai.processToolCalls(metadataResponse)
       if (metadataProcessed.handled) {
         console.log('✅ File metadata retrieved')
         operationsCompleted++
@@ -291,7 +289,7 @@ async function toolsIntegrationExample() {
     console.log('✅ Tools Integration Complete')
     console.log(`📊 Operations completed: ${operationsCompleted}`)
     console.log(`⏱️  Duration: ${duration}ms`)
-    console.log(`🛠️  Tools available: ${tools.definitions.length}`)
+    console.log(`🛠️  Tools available: ${projectTools.openai.definitions.length}`)
     console.log(`🤖 Integration mode: ${useAI ? 'AI-powered function calling' : 'Direct tool execution'}`)
     
     if (useAI) {
@@ -312,10 +310,10 @@ async function toolsIntegrationExample() {
 /**
  * Pattern: AI Function Calling with Department-Based Organization
  */
-export async function createDepartmentAI(
+export async function createScopedConversation(
   openai: OpenAI, 
   client: OpenFilesClient, 
-  department: string,
+  scope?: string,
   sessionId?: string
 ) {
   // Generate session ID if not provided for test isolation
@@ -323,23 +321,23 @@ export async function createDepartmentAI(
     sessionId = generateSessionId()
   }
   
-  // Create department-specific tools with session isolation
-  const deptTools = new OpenFilesTools(client, `session_${sessionId}/departments/${department}`)
+  // Create unified tools for the conversation scope
+  const conversationTools = new OpenFilesTools(scope ? client.withBasePath(scope) : client)
   
   return {
     async process(prompt: string) {
       const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
-        tools: deptTools.definitions,
+        tools: conversationTools.openai.definitions,
         temperature: 0.3
       })
       
-      const result = await deptTools.processToolCalls(response)
+      const result = await conversationTools.openai.processToolCalls(response)
       return {
         ...result,
-        department,
-        basePath: `session_${sessionId}/departments/${department}`
+        scope,
+        sessionId
       }
     }
   }

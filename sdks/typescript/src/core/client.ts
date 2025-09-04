@@ -455,7 +455,7 @@ export class OpenFilesClient {
       logger.debug(`Listing files in: ${resolvedDirectory}`)
 
       try {
-        const query: any = {
+        const query: { directory: string; limit: number; offset: number; recursive?: boolean } = {
           directory: resolvedDirectory,
           limit: params.limit || 10,
           offset: params.offset || 0

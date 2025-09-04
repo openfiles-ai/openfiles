@@ -26,9 +26,9 @@ describe('OpenFilesTools', () => {
     tools = new OpenFilesTools(mockClient)
   })
 
-  describe('definitions', () => {
+  describe('openai.definitions', () => {
     it('should return OpenAI-compatible tool definitions', () => {
-      const definitions = tools.definitions
+      const definitions = tools.openai.definitions
 
       expect(definitions).toHaveLength(8)
       expect(definitions[0].function.name).toBe('write_file')
@@ -53,243 +53,85 @@ describe('OpenFilesTools', () => {
     })
   })
 
-  describe('isOpenFilesTool', () => {
-    it('should identify OpenFiles tools', () => {
-      expect(tools.isOpenFilesTool('write_file')).toBe(true)
-      expect(tools.isOpenFilesTool('read_file')).toBe(true)
-      expect(tools.isOpenFilesTool('edit_file')).toBe(true)
-      expect(tools.isOpenFilesTool('list_files')).toBe(true)
-      expect(tools.isOpenFilesTool('append_to_file')).toBe(true)
-      expect(tools.isOpenFilesTool('overwrite_file')).toBe(true)
-      expect(tools.isOpenFilesTool('get_file_metadata')).toBe(true)
-      expect(tools.isOpenFilesTool('get_file_versions')).toBe(true)
-    })
+  describe('anthropic.definitions', () => {
+    it('should return Anthropic-compatible tool definitions', () => {
+      const definitions = tools.anthropic.definitions
 
-    it('should reject non-OpenFiles tools', () => {
-      expect(tools.isOpenFilesTool('some_other_tool')).toBe(false)
-      expect(tools.isOpenFilesTool('get_weather')).toBe(false)
-      expect(tools.isOpenFilesTool('')).toBe(false)
+      expect(definitions).toHaveLength(8)
+      expect(definitions[0].name).toBe('write_file')
+      expect(definitions[1].name).toBe('read_file')
+      expect(definitions[2].name).toBe('edit_file')
+      expect(definitions[3].name).toBe('list_files')
+      expect(definitions[4].name).toBe('append_to_file')
+      expect(definitions[5].name).toBe('overwrite_file')
+      expect(definitions[6].name).toBe('get_file_metadata')
+      expect(definitions[7].name).toBe('get_file_versions')
+
+      // Check Anthropic structure (flat with input_schema)
+      definitions.forEach(def => {
+        expect(def).toHaveProperty('name')
+        expect(def).toHaveProperty('description')
+        expect(def).toHaveProperty('input_schema')
+        expect(def.input_schema).toHaveProperty('type', 'object')
+        expect(def.input_schema).toHaveProperty('properties')
+        expect(def.input_schema).toHaveProperty('required')
+      })
     })
   })
 
-  describe('execute', () => {
-    it('should execute write_file tool', async () => {
+  describe('provider structure', () => {
+    it('should have openai provider with correct methods', () => {
+      expect(tools).toHaveProperty('openai')
+      expect(tools.openai).toHaveProperty('definitions')
+      expect(tools.openai).toHaveProperty('processToolCalls')
+      expect(typeof tools.openai.processToolCalls).toBe('function')
+    })
+
+    it('should have anthropic provider with correct methods', () => {
+      expect(tools).toHaveProperty('anthropic')
+      expect(tools.anthropic).toHaveProperty('definitions')
+      expect(tools.anthropic).toHaveProperty('processToolCalls')
+      expect(typeof tools.anthropic.processToolCalls).toBe('function')
+    })
+  })
+
+  describe('tool execution integration', () => {
+    it('should execute tools through processToolCalls', async () => {
       const mockResult = { id: 'file-123', path: 'test.txt', version: 1 }
       ;(mockClient.writeFile as any).mockResolvedValue(mockResult)
 
-      const toolCall = {
-        id: 'call-123',
-        function: {
-          name: 'write_file',
-          arguments: JSON.stringify({
-            path: 'test.txt',
-            content: 'Hello World',
-            contentType: 'text/plain'
-          })
-        }
+      const response = {
+        choices: [{
+          message: {
+            tool_calls: [{
+              id: 'call-123',
+              function: {
+                name: 'write_file',
+                arguments: JSON.stringify({
+                  path: 'test.txt',
+                  content: 'Hello World',
+                  contentType: 'text/plain'
+                })
+              }
+            }]
+          }
+        }]
       }
 
-      const result = await tools.executeTool(toolCall)
+      const result = await tools.openai.processToolCalls(response)
 
       expect(mockClient.writeFile).toHaveBeenCalledWith({
         path: 'test.txt',
         content: 'Hello World',
         contentType: 'text/plain'
       })
-      expect(result).toEqual(mockResult)
-    })
-
-    it('should execute read_file tool', async () => {
-      ;(mockClient.readFile as any).mockResolvedValue('Hello World')
-
-      const toolCall = {
-        id: 'call-123',
-        function: {
-          name: 'read_file',
-          arguments: JSON.stringify({
-            path: 'test.txt',
-            version: 1
-          })
-        }
-      }
-
-      const result = await tools.executeTool(toolCall)
-
-      expect(mockClient.readFile).toHaveBeenCalledWith({
-        path: 'test.txt',
-        version: 1
-      })
-      expect(result).toEqual({
-        path: 'test.txt',
-        content: 'Hello World',
-        version: 1
-      })
-    })
-
-    it('should execute edit_file tool', async () => {
-      const mockResult = { id: 'file-123', path: 'test.txt', version: 2 }
-      ;(mockClient.editFile as any).mockResolvedValue(mockResult)
-
-      const toolCall = {
-        id: 'call-123',
-        function: {
-          name: 'edit_file',
-          arguments: JSON.stringify({
-            path: 'test.txt',
-            oldString: 'Hello',
-            newString: 'Hi'
-          })
-        }
-      }
-
-      const result = await tools.executeTool(toolCall)
-
-      expect(mockClient.editFile).toHaveBeenCalledWith({
-        path: 'test.txt',
-        oldString: 'Hello',
-        newString: 'Hi'
-      })
-      expect(result).toEqual(mockResult)
-    })
-
-    it('should execute list_files tool', async () => {
-      const mockResult = { files: [], total: 0 }
-      ;(mockClient.listFiles as any).mockResolvedValue(mockResult)
-
-      const toolCall = {
-        id: 'call-123',
-        function: {
-          name: 'list_files',
-          arguments: JSON.stringify({
-            directory: 'src/',
-            limit: 10
-          })
-        }
-      }
-
-      const result = await tools.executeTool(toolCall)
-
-      expect(mockClient.listFiles).toHaveBeenCalledWith({
-        directory: 'src/',
-        limit: 10
-      })
-      expect(result).toEqual(mockResult)
-    })
-
-    it('should execute append_to_file tool', async () => {
-      const mockResult = { id: 'file-123', path: 'test.txt', version: 2 }
-      ;(mockClient.appendToFile as any).mockResolvedValue(mockResult)
-
-      const toolCall = {
-        id: 'call-123',
-        function: {
-          name: 'append_to_file',
-          arguments: JSON.stringify({
-            path: 'test.txt',
-            content: '\nAppended content'
-          })
-        }
-      }
-
-      const result = await tools.executeTool(toolCall)
-
-      expect(mockClient.appendToFile).toHaveBeenCalledWith({
-        path: 'test.txt',
-        content: '\nAppended content'
-      })
-      expect(result).toEqual(mockResult)
-    })
-
-    it('should execute overwrite_file tool', async () => {
-      const mockResult = { id: 'file-123', path: 'test.txt', version: 2 }
-      ;(mockClient.overwriteFile as any).mockResolvedValue(mockResult)
-
-      const toolCall = {
-        id: 'call-123',
-        function: {
-          name: 'overwrite_file',
-          arguments: JSON.stringify({
-            path: 'test.txt',
-            content: 'New content',
-            isBase64: false
-          })
-        }
-      }
-
-      const result = await tools.executeTool(toolCall)
-
-      expect(mockClient.overwriteFile).toHaveBeenCalledWith({
-        path: 'test.txt',
-        content: 'New content',
-        isBase64: false
-      })
-      expect(result).toEqual(mockResult)
-    })
-
-    it('should execute get_file_metadata tool', async () => {
-      const mockResult = { id: 'file-123', path: 'test.txt', version: 1, contentType: 'text/plain', sizeBytes: 11 }
-      ;(mockClient.getFileMetadata as any).mockResolvedValue(mockResult)
-
-      const toolCall = {
-        id: 'call-123',
-        function: {
-          name: 'get_file_metadata',
-          arguments: JSON.stringify({
-            path: 'test.txt',
-            version: 1
-          })
-        }
-      }
-
-      const result = await tools.executeTool(toolCall)
-
-      expect(mockClient.getFileMetadata).toHaveBeenCalledWith({
-        path: 'test.txt',
-        version: 1
-      })
-      expect(result).toEqual(mockResult)
-    })
-
-    it('should execute get_file_versions tool', async () => {
-      const mockResult = { versions: [], total: 0 }
-      ;(mockClient.getFileVersions as any).mockResolvedValue(mockResult)
-
-      const toolCall = {
-        id: 'call-123',
-        function: {
-          name: 'get_file_versions',
-          arguments: JSON.stringify({
-            path: 'test.txt',
-            limit: 5,
-            offset: 0
-          })
-        }
-      }
-
-      const result = await tools.executeTool(toolCall)
-
-      expect(mockClient.getFileVersions).toHaveBeenCalledWith({
-        path: 'test.txt',
-        limit: 5,
-        offset: 0
-      })
-      expect(result).toEqual(mockResult)
-    })
-
-    it('should throw error for unknown tool', async () => {
-      const toolCall = {
-        id: 'call-123',
-        function: {
-          name: 'unknown_tool',
-          arguments: '{}'
-        }
-      }
-
-      await expect(tools.executeTool(toolCall)).rejects.toThrow('Unknown tool: unknown_tool')
+      expect(result.handled).toBe(true)
+      expect(result.results).toHaveLength(1)
+      expect(result.results[0].status).toBe('success')
     })
   })
 
-  describe('processToolCalls', () => {
+  describe('openai.processToolCalls', () => {
     it('should process tool calls with OpenFiles tools', async () => {
       ;(mockClient.writeFile as any).mockResolvedValue({ id: 'file-123', path: 'test.txt' })
 
@@ -310,7 +152,7 @@ describe('OpenFilesTools', () => {
         }]
       }
 
-      const result = await tools.processToolCalls(response)
+      const result = await tools.openai.processToolCalls(response)
 
       expect(result.handled).toBe(true)
       expect(result.results).toHaveLength(1)
@@ -338,7 +180,7 @@ describe('OpenFilesTools', () => {
         }]
       }
 
-      const result = await tools.processToolCalls(response)
+      const result = await tools.openai.processToolCalls(response)
 
       expect(result.handled).toBe(false)
       expect(result.results).toHaveLength(0)
@@ -370,7 +212,7 @@ describe('OpenFilesTools', () => {
         }]
       }
 
-      const result = await tools.processToolCalls(response)
+      const result = await tools.openai.processToolCalls(response)
 
       expect(result.handled).toBe(true)
       expect(result.results).toHaveLength(1)
@@ -397,7 +239,7 @@ describe('OpenFilesTools', () => {
         }]
       }
 
-      const result = await tools.processToolCalls(response)
+      const result = await tools.openai.processToolCalls(response)
 
       expect(result.handled).toBe(true)
       expect(result.results).toHaveLength(1)
@@ -454,7 +296,7 @@ describe('OpenFilesTools', () => {
         }]
       }
 
-      const result = await tools.processToolCalls(response)
+      const result = await tools.openai.processToolCalls(response)
 
       expect(mockClient.writeFile).toHaveBeenCalledWith({
         path: 'config.json',
@@ -488,7 +330,7 @@ describe('OpenFilesTools', () => {
         }]
       }
 
-      await tools.processToolCalls(response)
+      await tools.openai.processToolCalls(response)
 
       expect(mockClient.readFile).toHaveBeenCalledWith({
         path: 'config.json',
@@ -521,7 +363,7 @@ describe('OpenFilesTools', () => {
         }]
       }
 
-      await tools.processToolCalls(response)
+      await tools.openai.processToolCalls(response)
 
       expect(mockClient.editFile).toHaveBeenCalledWith({
         path: 'config.json',
@@ -554,7 +396,7 @@ describe('OpenFilesTools', () => {
         }]
       }
 
-      await tools.processToolCalls(response)
+      await tools.openai.processToolCalls(response)
 
       expect(mockClient.listFiles).toHaveBeenCalledWith({
         directory: 'configs',
@@ -603,7 +445,7 @@ describe('OpenFilesTools', () => {
           }]
         }
 
-        await tools.processToolCalls(response)
+        await tools.openai.processToolCalls(response)
 
         // Verify each operation was called with basePath
         const expectedArgs = { ...op.args }
@@ -616,7 +458,7 @@ describe('OpenFilesTools', () => {
     })
 
     it('should verify basePath parameter does NOT exist in tool definitions', () => {
-      const definitions = tools.definitions
+      const definitions = tools.openai.definitions
 
       // BasePath should not be exposed to AI - it's handled internally by the SDK
       definitions.forEach(def => {

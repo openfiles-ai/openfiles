@@ -1,5 +1,31 @@
 # @openfiles-ai/sdk
 
+## 0.1.8
+
+### Patch Changes
+
+- Fix recursive parameter handling to only send when explicitly set
+
+- fix: openapi strict requirement for /list
+
+- file listing bug fixes, and other improvements
+
+## 0.1.7
+
+### Patch Changes
+
+- Fix recursive parameter handling to only send when explicitly set
+
+- fix: openapi strict requirement for /list
+
+## 0.1.6
+
+### Patch Changes
+
+- Fix recursive parameter handling to only send when explicitly set
+
+- fix: openapi strict requirement for /list
+
 ## 0.1.5
 
 ### Patch Changes

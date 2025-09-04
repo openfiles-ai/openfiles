@@ -40,13 +40,11 @@ async function openaiIntegrationExample() {
 
     console.log('📊 Creating business reports with AI...')
     
-    // Create scoped AI client for reports
-    const reportsAI = ai.withBasePath('reports')
-    await reportsAI.chat.completions.create({
+    await ai.chat.completions.create({
       model,
       messages: [{
         role: 'user',
-        content: 'Create a monthly sales report for January 2024 with sample data. Include revenue of $125,000, 85 new customers, and top regions. Save as january-2024-sales.md'
+        content: 'Create a monthly sales report for January 2024 with sample data. Include revenue of $125,000, 85 new customers, and top regions. Save it in the reports folder as january-2024-sales.md'
       }],
       temperature: 0.3
     })
@@ -54,13 +52,11 @@ async function openaiIntegrationExample() {
 
     console.log('⚙️  Setting up configuration with AI...')
     
-    // Create scoped AI client for config
-    const configAI = ai.withBasePath('config')
-    await configAI.chat.completions.create({
+    await ai.chat.completions.create({
       model,
       messages: [{
         role: 'user',
-        content: 'Create an application configuration file with database settings (PostgreSQL on localhost), API rate limits (1000/hour), and feature flags for analytics. Save as app-config.json'
+        content: 'Create an application configuration file with database settings (PostgreSQL on localhost), API rate limits (1000/hour), and feature flags for analytics. Save it in the config folder as app-config.json'
       }],
       temperature: 0.2
     })
@@ -68,13 +64,11 @@ async function openaiIntegrationExample() {
 
     console.log('📈 Generating analytics data with AI...')
     
-    // Create scoped AI client for analytics data
-    const dataAI = ai.withBasePath('analytics')
-    await dataAI.chat.completions.create({
+    await ai.chat.completions.create({
       model,
       messages: [{
         role: 'user',
-        content: 'Create a CSV file with user analytics data for the past week. Include columns for date, user_id, page_views, session_duration, and actions_taken. Generate 20 sample records. Save as user-metrics.csv'
+        content: 'Create a CSV file with user analytics data for the past week. Include columns for date, user_id, page_views, session_duration, and actions_taken. Generate 20 sample records. Save it in the analytics folder as user-metrics.csv'
       }],
       temperature: 0.3
     })

@@ -1,5 +1,5 @@
 /**
- * @openfiles/sdk/openai
+ * @openfiles-ai/sdk/openai
  * 
  * OpenAI client with OpenFiles tool integration
  * Follows OpenAI 2025 best practices for tool calling with structured outputs
@@ -11,9 +11,23 @@ import type { ClientOptions as OriginalClientOptions } from 'openai'
 // Use proper OpenAI namespace types
 type OriginalCreateParams = OriginalOpenAI.Chat.ChatCompletionCreateParams
 type ChatCompletion = OriginalOpenAI.Chat.ChatCompletion
+type ChatCompletionCreateMethod = OriginalOpenAI.Chat.Completions['create']
 import { OpenFilesClient } from '../core'
 import { OpenFilesTools } from '../tools'
 import { logger } from '../utils'
+import type { 
+  FileMetadata,
+  FileVersionsResponse
+} from '../core/generated/types.gen'
+
+// Type aliases for better clarity (actual return types from client methods)
+type FileOperationResult = 
+  | FileMetadata  // writeFile, editFile, appendToFile, overwriteFile, getFileMetadata
+  | string        // readFile
+  | { files: FileMetadata[], total: number }  // listFiles
+  | { versions: NonNullable<FileVersionsResponse['data']['versions']>, total: number }  // getFileVersions
+type OpenAICreateResponse = ChatCompletion | AsyncIterable<any>
+type ToolMessage = { role: 'tool'; tool_call_id: string; content: string }
 
 export interface FileOperation {
   action: string
@@ -21,7 +35,7 @@ export interface FileOperation {
   version?: number
   success: boolean
   error?: string
-  data?: any
+  data?: FileOperationResult
 }
 
 export interface ToolExecution {
@@ -29,7 +43,7 @@ export interface ToolExecution {
   function: string
   duration?: number
   success: boolean
-  result?: any
+  result?: FileOperationResult
   error?: string
 }
 
@@ -68,7 +82,7 @@ export type ChatCompletionCreateParamsStreaming = OriginalOpenAI.Chat.ChatComple
  * @example
  * ```typescript
  * // Before: import OpenAI from 'openai'
- * // After:  import OpenAI from '@openfiles/sdk/openai'
+ * // After:  import OpenAI from '@openfiles-ai/sdk/openai'
  * 
  * const ai = new OpenAI({
  *   apiKey: 'sk_your_openai_key',           // Same as before
@@ -103,7 +117,7 @@ export class OpenAI extends OriginalOpenAI {
     super(openAIConfig)
 
     this.config = config
-    const clientConfig: any = {
+    const clientConfig: { apiKey: string; baseUrl?: string; basePath?: string } = {
       apiKey: openFilesApiKey,
       ...(openFilesBaseUrl && { baseUrl: openFilesBaseUrl }),
       ...(basePath && { basePath: basePath })
@@ -150,7 +164,7 @@ export class OpenAI extends OriginalOpenAI {
   /**
    * Create enhanced method with proper typing for OpenAI API overloads
    */
-  private createEnhancedMethod(originalCreate: any) {
+  private createEnhancedMethod(originalCreate: ChatCompletionCreateMethod) {
     return async (params: ChatCompletionCreateParams) => {
       return this.enhancedCreate(originalCreate, params)
     }
@@ -160,13 +174,13 @@ export class OpenAI extends OriginalOpenAI {
    * Enhanced create method that auto-handles OpenFiles tools
    * True drop-in replacement - user doesn't need to manage tool flow
    */
-  private async enhancedCreate(originalCreate: any, params: ChatCompletionCreateParams) {
+  private async enhancedCreate(originalCreate: ChatCompletionCreateMethod, params: ChatCompletionCreateParams): Promise<OpenAICreateResponse> {
     // Auto-inject OpenFiles tools alongside user's tools
     const enhancedParams: ChatCompletionCreateParams = {
       ...params,
       parallel_tool_calls: false,  // Force sequential execution for reliable file operations
       tools: [
-        ...this.toolsInstance.definitions,
+        ...this.toolsInstance.openai.definitions,
         ...(params.tools || [])
       ]
     }
@@ -174,8 +188,16 @@ export class OpenAI extends OriginalOpenAI {
     // Call OpenAI API
     const response = await originalCreate(enhancedParams)
 
+    // Check if response is streamable (has Symbol.asyncIterator)
+    if (response && typeof response === 'object' && Symbol.asyncIterator in response) {
+      // For streaming responses, return as-is without tool processing
+      return response
+    }
+    
+    const chatResponse = response as ChatCompletion
+
     // Auto-execute OpenFiles tools if present
-    const toolMessages = await this.executeTools(response)
+    const toolMessages = await this.executeTools(chatResponse)
     
     if (toolMessages.length > 0) {
       // Continue conversation with tool results automatically
@@ -183,14 +205,14 @@ export class OpenAI extends OriginalOpenAI {
         ...params,
         messages: [
           ...params.messages,
-          response.choices[0].message,
+          chatResponse.choices[0].message,
           ...toolMessages
         ]
-      })
+      }) as ChatCompletion
       return finalResponse
     }
 
-    return response
+    return chatResponse
   }
 
   /**
@@ -200,14 +222,14 @@ export class OpenAI extends OriginalOpenAI {
    * @param response - OpenAI completion response containing tool calls
    * @returns Array of tool messages to add to conversation
    */
-  async executeTools(response: any): Promise<Array<{ role: 'tool', tool_call_id: string, content: string }>> {
-    const toolMessages: Array<{ role: 'tool', tool_call_id: string, content: string }> = []
+  async executeTools(response: ChatCompletion): Promise<ToolMessage[]> {
+    const toolMessages: ToolMessage[] = []
     
     // Track timing for the entire tool processing
     const startTime = Date.now()
     
     // Use the tools layer to process the response
-    const processed = await this.toolsInstance.processToolCalls(response)
+    const processed = await this.toolsInstance.openai.processToolCalls(response)
     
     const totalDuration = Date.now() - startTime
     
@@ -221,7 +243,7 @@ export class OpenAI extends OriginalOpenAI {
             success: true,
             data: result.data,
             operation: result.function,
-            message: this.getOperationMessage(result.function, result.args || {}, result.data)
+            message: result.data ? this.getOperationMessage(result.function, result.args || {}, result.data) : `Completed ${result.function} operation`
           })
         })
 
@@ -293,28 +315,46 @@ export class OpenAI extends OriginalOpenAI {
   /**
    * Generate descriptive message for tool operation result
    */
-  private getOperationMessage(operation: string, args: any, result: any): string {
-    const fileName = args.path || result.path || 'file'
+  private getOperationMessage(operation: string, args: Record<string, unknown>, result: FileOperationResult): string {
+    // Helper function to safely access path from result
+    const getPath = (result: FileOperationResult): string => {
+      if (typeof result === 'object' && result && 'path' in result) {
+        return (result as FileMetadata).path || '';
+      }
+      return '';
+    };
+
+    const fileName = (args.path as string) || getPath(result) || 'file';
     
     switch (operation) {
       case 'write_file':
-        return `Created file "${fileName}" (${result.size || 0} bytes)`
-      case 'read_file':
-        return `Read content from "${fileName}" (${result.content?.length || 0} characters)`
+      case 'overwrite_file': {
+        const size = (typeof result === 'object' && result && 'size' in result) 
+          ? (result as FileMetadata).size : 0;
+        return `${operation === 'write_file' ? 'Created' : 'Overwrote'} file "${fileName}" (${size || 0} bytes)`;
+      }
+      case 'read_file': {
+        const content = typeof result === 'string' ? result : '';
+        return `Read content from "${fileName}" (${content.length || 0} characters)`;
+      }
+      case 'list_files': {
+        const files = (typeof result === 'object' && result && 'files' in result)
+          ? (result as { files: FileMetadata[], total: number }).files : [];
+        return `Listed ${files?.length || 0} files in directory`;
+      }
+      case 'get_file_versions': {
+        const versions = (typeof result === 'object' && result && 'versions' in result)
+          ? (result as { versions: unknown[], total: number }).versions : [];
+        return `Retrieved ${versions?.length || 0} versions for "${fileName}"`;
+      }
       case 'edit_file':
-        return `Updated file "${fileName}" with string replacement`
+        return `Updated file "${fileName}" with string replacement`;
       case 'append_to_file':
-        return `Added content to "${fileName}"`
-      case 'overwrite_file':
-        return `Replaced content of "${fileName}"`
-      case 'list_files':
-        return `Listed ${result.total || 0} files in directory`
+        return `Added content to "${fileName}"`;
       case 'get_file_metadata':
-        return `Retrieved metadata for "${fileName}"`
-      case 'get_file_versions':
-        return `Retrieved ${result.total || 0} versions for "${fileName}"`
+        return `Retrieved metadata for "${fileName}"`;
       default:
-        return `Completed ${operation} operation`
+        return `Completed ${operation} operation`;
     }
   }
 
@@ -323,7 +363,7 @@ export class OpenAI extends OriginalOpenAI {
    */
   get tools() {
     return {
-      definitions: this.toolsInstance.definitions
+      definitions: this.toolsInstance.openai.definitions
     }
   }
 

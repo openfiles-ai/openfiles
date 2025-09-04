@@ -7,13 +7,21 @@ Follows OpenAI 2025 best practices for tool calling.
 
 import asyncio
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from openai import OpenAI as OriginalOpenAI
 
 from ..core import OpenFilesClient
 from ..tools import OpenFilesTools
+from ..tools.tools import ToolResult, ProcessedToolCalls
 from ..utils.logger import get_logger
+
+# Type aliases for better clarity
+OpenAIMessage = Dict[str, Union[str, List[Dict[str, Any]]]]
+OpenAITool = Dict[str, Any]
+OpenAIResponse = Any  # OpenAI's response object - will be specific once we can import types
+ToolMessage = Dict[str, str]  # {"role": "tool", "tool_call_id": "...", "content": "..."}
+FileOperationData = Union[Dict[str, Union[str, int, bool]], Any]  # File operation results can vary
 
 logger = get_logger(__name__)
 
@@ -28,7 +36,7 @@ class FileOperation:
         version: Optional[int] = None,
         success: bool = True,
         error: Optional[str] = None,
-        data: Any = None,
+        data: Optional[FileOperationData] = None,
     ):
         self.action = action
         self.path = path
@@ -46,7 +54,7 @@ class ToolExecution:
         tool_call_id: str,
         function: str,
         success: bool,
-        result: Any = None,
+        result: Optional[FileOperationData] = None,
         error: Optional[str] = None,
         duration: Optional[float] = None,
     ):
@@ -70,8 +78,8 @@ class ClientOptions:
         on_file_operation: Optional[Callable[[FileOperation], None]] = None,
         on_tool_execution: Optional[Callable[[ToolExecution], None]] = None,
         on_error: Optional[Callable[[Exception], None]] = None,
-        **openai_kwargs,
-    ):
+        **openai_kwargs: Any,
+    ) -> None:
         self.openfiles_api_key = openfiles_api_key
         self.api_key = api_key
         self.openfiles_base_url = openfiles_base_url
@@ -126,8 +134,8 @@ class OpenAI(OriginalOpenAI):
         on_file_operation: Optional[Callable[[FileOperation], None]] = None,
         on_tool_execution: Optional[Callable[[ToolExecution], None]] = None,
         on_error: Optional[Callable[[Exception], None]] = None,
-        **openai_kwargs,
-    ):
+        **openai_kwargs: Any,
+    ) -> None:
         """
         Initialize OpenAI client with OpenFiles integration
 
@@ -170,7 +178,8 @@ class OpenAI(OriginalOpenAI):
 
         # Override chat.completions.create to auto-handle OpenFiles tools
         original_create = self.chat.completions.create
-        self.chat.completions.create = self._create_enhanced_method(original_create)
+        # Use monkey patching to replace the method
+        setattr(self.chat.completions, 'create', self._create_enhanced_method(original_create))
 
     def with_base_path(self, base_path: str) -> "OpenAI":
         """
@@ -211,16 +220,16 @@ class OpenAI(OriginalOpenAI):
             **self.config.openai_kwargs,
         )
 
-    def _create_enhanced_method(self, original_create):
+    def _create_enhanced_method(self, original_create: Callable) -> Callable:
         """Create enhanced method with proper typing for OpenAI API"""
         
         async def enhanced_create(
-            messages,
-            model,
-            tools=None,
-            parallel_tool_calls=None,
-            **kwargs
-        ):
+            messages: List[OpenAIMessage],
+            model: str,
+            tools: Optional[List[OpenAITool]] = None,
+            parallel_tool_calls: Optional[bool] = None,
+            **kwargs: Any
+        ) -> OpenAIResponse:
             return await self._enhanced_create(
                 original_create,
                 messages=messages,
@@ -234,20 +243,20 @@ class OpenAI(OriginalOpenAI):
 
     async def _enhanced_create(
         self, 
-        original_create, 
-        messages, 
-        model, 
-        tools=None, 
-        parallel_tool_calls=None,
-        **kwargs
-    ):
+        original_create: Callable, 
+        messages: List[OpenAIMessage], 
+        model: str, 
+        tools: Optional[List[OpenAITool]] = None, 
+        parallel_tool_calls: Optional[bool] = None,
+        **kwargs: Union[str, bool, int, float]
+    ) -> OpenAIResponse:
         """
         Enhanced create method that auto-handles OpenFiles tools
         True drop-in replacement - user doesn't need to manage tool flow
         """
         try:
             # Auto-inject OpenFiles tools alongside user's tools
-            openfiles_tools = [tool.to_dict() for tool in self.tools_instance.definitions]
+            openfiles_tools = [tool.to_dict() for tool in self.tools_instance.openai.definitions]
             enhanced_tools = openfiles_tools + (tools or [])
 
             enhanced_params = {
@@ -285,7 +294,7 @@ class OpenAI(OriginalOpenAI):
                 self.config.on_error(e)
             raise
 
-    async def _execute_tools(self, response) -> List[Dict[str, Any]]:
+    async def _execute_tools(self, response: OpenAIResponse) -> List[ToolMessage]:
         """
         Execute OpenFiles tools from a completion response
         Returns tool messages that should be added to the conversation
@@ -299,7 +308,7 @@ class OpenAI(OriginalOpenAI):
         start_time = time.time()
 
         # Use the tools layer to process the response
-        processed = await self.tools_instance.process_tool_calls(response)
+        processed: ProcessedToolCalls = await self.tools_instance.openai.process_tool_calls(response)
 
         total_duration = time.time() - start_time
 
@@ -368,7 +377,7 @@ class OpenAI(OriginalOpenAI):
 
         return tool_messages
 
-    def _create_tool_message_content(self, result) -> str:
+    def _create_tool_message_content(self, result: ToolResult) -> str:
         """Create content for successful tool execution"""
         import json
 
@@ -386,7 +395,7 @@ class OpenAI(OriginalOpenAI):
             "message": self._get_operation_message(result.function, result.args, result.data),
         })
 
-    def _create_error_message_content(self, result) -> str:
+    def _create_error_message_content(self, result: ToolResult) -> str:
         """Create content for failed tool execution"""
         import json
 
@@ -396,12 +405,12 @@ class OpenAI(OriginalOpenAI):
             "operation": result.function,
         })
 
-    def _extract_operation_path(self, result) -> Optional[str]:
+    def _extract_operation_path(self, result: ToolResult) -> Optional[str]:
         """Extract path from result for monitoring"""
         if hasattr(result.data, "path"):
-            return result.data.path
+            return str(result.data.path)
         elif result.args and "path" in result.args:
-            return result.args["path"]
+            return str(result.args["path"])
         elif result.function == "list_files":
             directory = result.args.get("directory", "/") if result.args else "/"
             file_count = 0
@@ -410,7 +419,7 @@ class OpenAI(OriginalOpenAI):
             return f"{directory} ({file_count} files)"
         return None
 
-    def _get_operation_message(self, function: str, args: Dict[str, Any], data: Any) -> str:
+    def _get_operation_message(self, function: str, args: Dict[str, Union[str, int, bool]], data: FileOperationData) -> str:
         """Generate human-readable operation message"""
         if function == "write_file":
             return f"Created file: {args.get('path', 'unknown')}"

@@ -1,7 +1,7 @@
 """
 OpenFiles Tools - Framework-agnostic AI tool definitions
 
-Provides OpenAI-compatible tool definitions and automatic execution
+Provides provider-specific tool definitions and automatic execution
 for file operations. Only handles OpenFiles tools, ignoring others.
 """
 
@@ -9,6 +9,9 @@ import json
 from typing import Any, Dict, List, Optional
 
 from ..core import OpenFilesClient
+from ..utils.logger import Logger
+
+logger = Logger()
 
 
 class ToolDefinition:
@@ -55,7 +58,7 @@ class ToolResult:
 
 
 class ProcessedToolCalls:
-    """Result of processing tool calls"""
+    """Result of processing OpenAI tool calls"""
 
     def __init__(self, handled: bool = False, results: Optional[List[ToolResult]] = None):
         self.handled = handled
@@ -87,6 +90,48 @@ class ProcessedToolCalls:
             )
 
 
+class AnthropicProcessedToolCalls:
+    """Result of processing Anthropic tool calls"""
+
+    def __init__(self, handled: bool = False, results: Optional[List[ToolResult]] = None):
+        self.handled = handled
+        self.results = results or []
+        self.tool_messages = []
+
+        # Generate tool result messages for Anthropic API
+        if self.results:
+            tool_results = []
+            for result in self.results:
+                if result.status == "success":
+                    # Convert Pydantic models to dict for JSON serialization
+                    data = result.data
+                    if hasattr(data, "model_dump"):
+                        data = data.model_dump(mode="json")
+                    elif hasattr(data, "dict"):
+                        data = data.dict()
+
+                    content = json.dumps({"success": True, "data": data, "operation": result.function})
+                else:
+                    content = json.dumps(
+                        {
+                            "success": False,
+                            "error": {"code": "EXECUTION_ERROR", "message": result.error},
+                            "operation": result.function,
+                        }
+                    )
+
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": result.tool_call_id,
+                    "content": content
+                })
+
+            self.tool_messages.append({
+                "role": "user",
+                "content": tool_results
+            })
+
+
 class ToolCall:
     """Represents a tool call from OpenAI API"""
 
@@ -98,8 +143,8 @@ class ToolCall:
 class OpenFilesTools:
     """
     OpenFiles Tools for AI Agents
-
-    Provides OpenAI-compatible tool definitions and automatic execution
+    
+    Provider-specific tool definitions and automatic execution
     for file operations. Only handles OpenFiles tools, ignoring others.
 
     Example:
@@ -110,21 +155,23 @@ class OpenFilesTools:
         client = OpenFilesClient(api_key='oa_...')
         tools = OpenFilesTools(client)
 
-        # With base_path for organized file structure
-        project_tools = OpenFilesTools(client, 'projects/website')
-
-        # Use with existing OpenAI client
+        # Use with OpenAI
         import openai
         response = openai.chat.completions.create(
             model='gpt-4',
             messages=[...],
-            tools=[tool.to_dict() for tool in project_tools.definitions] + my_other_tools
+            tools=[tool.to_dict() for tool in tools.openai.definitions]
         )
+        processed = await tools.openai.process_tool_calls(response)
 
-        # Process OpenFiles tools only
-        processed = await project_tools.process_tool_calls(response)
-        if processed.handled:
-            print('Files created:', processed.results)
+        # Use with Anthropic
+        import anthropic
+        response = anthropic.messages.create(
+            model='claude-sonnet-4-20250514',
+            messages=[...],
+            tools=tools.anthropic.definitions
+        )
+        processed = await tools.anthropic.process_tool_calls(response)
         ```
     """
 
@@ -138,6 +185,8 @@ class OpenFilesTools:
         """
         self.client = client
         self.base_path = base_path
+        self.openai = OpenAIProvider(client, base_path)
+        self.anthropic = AnthropicProvider(client, base_path)
 
     def with_base_path(self, base_path: str) -> "OpenFilesTools":
         """
@@ -160,12 +209,58 @@ class OpenFilesTools:
         """
         return OpenFilesTools(self.client, base_path)
 
+
+class OpenAIProvider:
+    """OpenAI provider for OpenFiles tools"""
+    
+    def __init__(self, client: OpenFilesClient, base_path: Optional[str] = None):
+        self.client = client.with_base_path(base_path) if base_path else client
+        self.base_path = base_path
+    
+    def _strip_base_path(self, result: Any) -> Any:
+        """Strip base_path from response to make it transparent to AI"""
+        if not self.base_path or not result:
+            return result
+        
+        # Handle FileMetadata objects
+        if hasattr(result, 'path') and result.path:
+            if result.path.startswith(f"{self.base_path}/"):
+                result.path = result.path[len(self.base_path) + 1:]
+        
+        # Handle dict with path key
+        elif isinstance(result, dict) and 'path' in result:
+            if result['path'] and result['path'].startswith(f"{self.base_path}/"):
+                result['path'] = result['path'][len(self.base_path) + 1:]
+        
+        # Handle file list responses
+        if hasattr(result, 'files') and result.files:
+            for file in result.files:
+                if hasattr(file, 'path') and file.path:
+                    if file.path.startswith(f"{self.base_path}/"):
+                        file.path = file.path[len(self.base_path) + 1:]
+        elif isinstance(result, dict) and 'files' in result:
+            for file in result['files']:
+                if isinstance(file, dict) and 'path' in file:
+                    if file['path'] and file['path'].startswith(f"{self.base_path}/"):
+                        file['path'] = file['path'][len(self.base_path) + 1:]
+        
+        # Handle file versions response
+        if hasattr(result, 'versions') and result.versions:
+            for version in result.versions:
+                if hasattr(version, 'path') and version.path:
+                    if version.path.startswith(f"{self.base_path}/"):
+                        version.path = version.path[len(self.base_path) + 1:]
+        elif isinstance(result, dict) and 'versions' in result:
+            for version in result['versions']:
+                if isinstance(version, dict) and 'path' in version:
+                    if version['path'] and version['path'].startswith(f"{self.base_path}/"):
+                        version['path'] = version['path'][len(self.base_path) + 1:]
+        
+        return result
+
     @property
     def definitions(self) -> List[ToolDefinition]:
-        """
-        OpenAI-compatible tool definitions
-        Use these in your OpenAI chat completions request
-        """
+        """OpenAI-compatible tool definitions"""
         return [
             ToolDefinition(
                 name="write_file",
@@ -176,7 +271,7 @@ class OpenFilesTools:
                         "path": {
                             "type": "string",
                             "description": "File path (S3-style, no leading slash)",
-                            "example": "reports/quarterly-report.md",
+                            "example": "document.md",
                         },
                         "content": {"type": "string", "description": "File content to write"},
                         "contentType": {
@@ -199,7 +294,7 @@ class OpenFilesTools:
                         "path": {
                             "type": "string",
                             "description": "File path (S3-style, no leading slash)",
-                            "example": "reports/quarterly-report.md",
+                            "example": "document.md",
                         },
                         "version": {
                             "type": "number",
@@ -220,7 +315,7 @@ class OpenFilesTools:
                         "path": {
                             "type": "string",
                             "description": "File path (S3-style, no leading slash)",
-                            "example": "reports/quarterly-report.md",
+                            "example": "document.md",
                         },
                         "oldString": {
                             "type": "string",
@@ -237,20 +332,20 @@ class OpenFilesTools:
             ),
             ToolDefinition(
                 name="list_files",
-                description="LIST files in a directory. Use when user wants to: browse files, see what exists, explore directory contents, or find available files.",
+                description="LIST files. Use when user wants to: browse files, see what exists, explore contents, or find available files. IMPORTANT: Always use recursive=true unless user explicitly asks for a specific directory only.",
                 parameters={
                     "type": "object",
                     "properties": {
                         "directory": {
                             "type": "string",
                             "description": "Directory path to list files from",
-                            "example": "reports/",
+                            "example": "folder/",
                             "default": "/",
                         },
                         "recursive": {
                             "type": "boolean",
-                            "description": "If true, lists all files across all directories. If false (default), only lists files in the specified directory",
-                            "default": False,
+                            "description": "IMPORTANT: Use true to search all directories (recommended for 'list all files'), false only for specific directory browsing",
+                            "default": True,
                         },
                         "limit": {
                             "type": "number",
@@ -318,7 +413,7 @@ class OpenFilesTools:
                         "path": {
                             "type": "string",
                             "description": "File path (S3-style, no leading slash)",
-                            "example": "reports/quarterly-report.md",
+                            "example": "document.md",
                         },
                         "version": {
                             "type": "number",
@@ -332,25 +427,25 @@ class OpenFilesTools:
             ),
             ToolDefinition(
                 name="get_file_versions",
-                description="GET file version history and information. Use when user wants to: see versions, check history, or explore file changes over time.",
+                description="GET version history of a file. Use when user wants to: see file history, list all versions, or access previous versions.",
                 parameters={
                     "type": "object",
                     "properties": {
                         "path": {
                             "type": "string",
                             "description": "File path (S3-style, no leading slash)",
-                            "example": "reports/quarterly-report.md",
+                            "example": "document.md",
                         },
                         "limit": {
                             "type": "number",
                             "description": "Maximum number of versions to return",
                             "default": 10,
                             "minimum": 1,
-                            "maximum": 50,
+                            "maximum": 100,
                         },
                         "offset": {
                             "type": "number",
-                            "description": "Number of versions to skip (for pagination)",
+                            "description": "Number of versions to skip for pagination",
                             "default": 0,
                             "minimum": 0,
                         },
@@ -362,184 +457,435 @@ class OpenFilesTools:
         ]
 
     async def process_tool_calls(self, response: Any) -> ProcessedToolCalls:
-        """
-        Process OpenAI response and execute OpenFiles tool calls
-
-        Args:
-            response: OpenAI chat completion response or similar structure
-
-        Returns:
-            ProcessedToolCalls with execution results
-        """
+        """Process OpenAI tool calls"""
         results = []
         handled = False
 
-        # Handle different response formats (Pydantic models and dicts)
-        if hasattr(response, "choices"):
-            choices = response.choices
-        elif isinstance(response, dict) and "choices" in response:
-            choices = response["choices"]
-        else:
-            choices = []
-
-        for choice in choices:
-            if hasattr(choice, "message"):
-                message = choice.message
-            elif isinstance(choice, dict) and "message" in choice:
-                message = choice["message"]
-            else:
-                continue
-                
-            if hasattr(message, "tool_calls"):
-                tool_calls = message.tool_calls or []
-            elif isinstance(message, dict) and "tool_calls" in message:
-                tool_calls = message["tool_calls"] or []
-            else:
-                continue
-
+        # OpenAI format: response.choices[0].message.tool_calls
+        for choice in getattr(response, "choices", []):
+            tool_calls = getattr(choice.message, "tool_calls", [])
+            
             for tool_call in tool_calls:
-                if hasattr(tool_call, "id"):
-                    tool_call_id = tool_call.id
-                elif isinstance(tool_call, dict):
-                    tool_call_id = tool_call.get("id")
-                else:
-                    continue
-                    
-                if hasattr(tool_call, "function"):
-                    function = tool_call.function
-                elif isinstance(tool_call, dict):
-                    function = tool_call.get("function", {})
-                else:
-                    continue
-                    
-                if hasattr(function, "name"):
-                    function_name = function.name
-                elif isinstance(function, dict):
-                    function_name = function.get("name")
-                else:
-                    continue
-                    
-                if hasattr(function, "arguments"):
-                    arguments = function.arguments
-                elif isinstance(function, dict):
-                    arguments = function.get("arguments", "{}")
-                else:
-                    arguments = "{}"
-
-                if self._is_openfiles_tool(function_name):
+                if self._is_openfiles_tool(tool_call.function.name):
                     handled = True
-
+                    
                     try:
-                        args = json.loads(arguments)
-                        tool_call_obj = ToolCall(tool_call_id, function_name, arguments)
-                        result_data = await self._execute_tool(tool_call_obj)
-
-                        results.append(
-                            ToolResult(
-                                tool_call_id=tool_call_id,
-                                function=function_name,
-                                status="success",
-                                data=result_data,
-                                args=args,
-                            )
-                        )
-
-                    except Exception as e:
-                        args = json.loads(arguments) if arguments else {}
-                        error_message = str(e)
-
-                        results.append(
-                            ToolResult(
-                                tool_call_id=tool_call_id,
-                                function=function_name,
-                                status="error",
-                                error=error_message,
-                                args=args,
-                            )
-                        )
+                        args = json.loads(tool_call.function.arguments)
+                        result = await self._execute_tool(tool_call.function.name, args)
+                        
+                        results.append(ToolResult(
+                            tool_call_id=tool_call.id,
+                            function=tool_call.function.name,
+                            status="success",
+                            data=result,
+                            args=args
+                        ))
+                    except Exception as error:
+                        results.append(ToolResult(
+                            tool_call_id=tool_call.id,
+                            function=tool_call.function.name,
+                            status="error",
+                            error=str(error),
+                            args=json.loads(tool_call.function.arguments) if tool_call.function.arguments else {}
+                        ))
 
         return ProcessedToolCalls(handled=handled, results=results)
 
     def _is_openfiles_tool(self, name: str) -> bool:
-        """Check if a tool name is an OpenFiles tool (internal method)"""
+        """Check if tool name is an OpenFiles tool"""
         return name in [
-            "write_file",
-            "read_file",
-            "edit_file",
-            "list_files",
-            "append_to_file",
-            "overwrite_file",
-            "get_file_metadata",
-            "get_file_versions",
+            'write_file', 'read_file', 'edit_file', 'list_files',
+            'append_to_file', 'overwrite_file', 'get_file_metadata', 'get_file_versions'
         ]
 
-    async def _execute_tool(self, tool_call: ToolCall) -> Any:
-        """Execute a single tool call (private - for internal use only)"""
-        args = json.loads(tool_call.function["arguments"])
-
-        if tool_call.function["name"] == "write_file":
-            return await self.client.write_file(
+    async def _execute_tool(self, tool_name: str, args: Dict[str, Any]) -> Any:
+        """Execute a tool call"""
+        result = None
+        
+        if tool_name == "write_file":
+            result = await self.client.write_file(
                 path=args["path"],
                 content=args["content"],
                 content_type=args["contentType"],
-                base_path=self.base_path,
             )
-
-        elif tool_call.function["name"] == "read_file":
-            version = args["version"] if args["version"] != 0 else None
-            content_response = await self.client.read_file(
-                path=args["path"], version=version, base_path=self.base_path
+        elif tool_name == "read_file":
+            response = await self.client.read_file(
+                path=args["path"],
+                version=args["version"] if args["version"] != 0 else None,
             )
-            return {
-                "path": args["path"],
-                "content": content_response.data.content,
-                "version": args["version"],
-            }
-
-        elif tool_call.function["name"] == "edit_file":
-            return await self.client.edit_file(
+            return {"path": args["path"], "content": response.data.content, "version": args["version"]}
+        elif tool_name == "edit_file":
+            result = await self.client.edit_file(
                 path=args["path"],
                 old_string=args["oldString"],
                 new_string=args["newString"],
-                base_path=self.base_path,
             )
-
-        elif tool_call.function["name"] == "list_files":
-            kwargs = {
+        elif tool_name == "list_files":
+            list_params = {
                 "directory": args["directory"],
+                "recursive": args.get("recursive", True),
                 "limit": args["limit"],
-                "base_path": self.base_path
             }
-            if "recursive" in args:
-                kwargs["recursive"] = args["recursive"]
-            return await self.client.list_files(**kwargs)
-
-        elif tool_call.function["name"] == "append_to_file":
-            return await self.client.append_file(
-                path=args["path"], content=args["content"], base_path=self.base_path
-            )
-
-        elif tool_call.function["name"] == "overwrite_file":
-            return await self.client.overwrite_file(
+            logger.debug(f"list_files params: {json.dumps(list_params, indent=2)}")
+            result = await self.client.list_files(**list_params)
+        elif tool_name == "append_to_file":
+            result = await self.client.append_file(
                 path=args["path"],
                 content=args["content"],
-                is_base64=args.get("isBase64", False),
-                base_path=self.base_path,
             )
-
-        elif tool_call.function["name"] == "get_file_metadata":
-            version = args["version"] if args["version"] != 0 else None
-            return await self.client.get_metadata(
-                path=args["path"], version=version, base_path=self.base_path
+        elif tool_name == "overwrite_file":
+            result = await self.client.overwrite_file(
+                path=args["path"],
+                content=args["content"],
+                is_base64=args["isBase64"],
             )
-
-        elif tool_call.function["name"] == "get_file_versions":
-            return await self.client.get_versions(
+        elif tool_name == "get_file_metadata":
+            result = await self.client.get_metadata(
+                path=args["path"],
+                version=args["version"] if args["version"] != 0 else None,
+            )
+        elif tool_name == "get_file_versions":
+            result = await self.client.get_versions(
                 path=args["path"],
                 limit=args["limit"],
                 offset=args["offset"],
-                base_path=self.base_path,
             )
-
         else:
-            raise ValueError(f"Unknown tool: {tool_call.function['name']}")
+            raise ValueError(f"Unknown tool: {tool_name}")
+        
+        # Strip base path from result to make it transparent to AI  
+        return self._strip_base_path(result)
+        
+        # Strip base path from result to make it transparent to AI
+        return self._strip_base_path(result)
+
+
+class AnthropicProvider:
+    """Anthropic provider for OpenFiles tools"""
+    
+    def __init__(self, client: OpenFilesClient, base_path: Optional[str] = None):
+        self.client = client.with_base_path(base_path) if base_path else client
+        self.base_path = base_path
+    
+    def _strip_base_path(self, result: Any) -> Any:
+        """Strip base_path from response to make it transparent to AI"""
+        if not self.base_path or not result:
+            return result
+        
+        # Handle FileMetadata objects
+        if hasattr(result, 'path') and result.path:
+            if result.path.startswith(f"{self.base_path}/"):
+                result.path = result.path[len(self.base_path) + 1:]
+        
+        # Handle dict with path key
+        elif isinstance(result, dict) and 'path' in result:
+            if result['path'] and result['path'].startswith(f"{self.base_path}/"):
+                result['path'] = result['path'][len(self.base_path) + 1:]
+        
+        # Handle file list responses
+        if hasattr(result, 'files') and result.files:
+            for file in result.files:
+                if hasattr(file, 'path') and file.path:
+                    if file.path.startswith(f"{self.base_path}/"):
+                        file.path = file.path[len(self.base_path) + 1:]
+        elif isinstance(result, dict) and 'files' in result:
+            for file in result['files']:
+                if isinstance(file, dict) and 'path' in file:
+                    if file['path'] and file['path'].startswith(f"{self.base_path}/"):
+                        file['path'] = file['path'][len(self.base_path) + 1:]
+        
+        # Handle file versions response
+        if hasattr(result, 'versions') and result.versions:
+            for version in result.versions:
+                if hasattr(version, 'path') and version.path:
+                    if version.path.startswith(f"{self.base_path}/"):
+                        version.path = version.path[len(self.base_path) + 1:]
+        elif isinstance(result, dict) and 'versions' in result:
+            for version in result['versions']:
+                if isinstance(version, dict) and 'path' in version:
+                    if version['path'] and version['path'].startswith(f"{self.base_path}/"):
+                        version['path'] = version['path'][len(self.base_path) + 1:]
+        
+        return result
+
+    @property
+    def definitions(self) -> List[Dict[str, Any]]:
+        """Anthropic-compatible tool definitions"""
+        return [
+            {
+                "name": "write_file",
+                "description": "CREATE a NEW file (fails if file exists). Use when user wants to: create, generate, make, or write a new file. For existing files, use edit_file, append_to_file, or overwrite_file instead.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "File path (S3-style, no leading slash)"
+                        },
+                        "content": {
+                            "type": "string",
+                            "description": "File content to write"
+                        },
+                        "contentType": {
+                            "type": "string",
+                            "description": "MIME type of file content. Provide specific type (e.g., text/plain, text/markdown, application/json) or use application/octet-stream as default",
+                            "default": "application/octet-stream"
+                        }
+                    },
+                    "required": ["path", "content", "contentType"]
+                }
+            },
+            {
+                "name": "read_file",
+                "description": "READ and DISPLAY existing file content. Use when user asks to: see, show, read, view, display, or retrieve file content. Returns the actual content to show the user.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "File path (S3-style, no leading slash)"
+                        },
+                        "version": {
+                            "type": "number",
+                            "description": "Specific version to read (use 0 or omit for latest version)",
+                            "default": 0
+                        }
+                    },
+                    "required": ["path", "version"]
+                }
+            },
+            {
+                "name": "edit_file",
+                "description": "MODIFY parts of an existing file by replacing specific text. Use when user wants to: update, change, fix, or edit specific portions while keeping the rest.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "File path (S3-style, no leading slash)"
+                        },
+                        "oldString": {
+                            "type": "string",
+                            "description": "Exact string to find and replace"
+                        },
+                        "newString": {
+                            "type": "string",
+                            "description": "Replacement string"
+                        }
+                    },
+                    "required": ["path", "oldString", "newString"]
+                }
+            },
+            {
+                "name": "list_files",
+                "description": "LIST files. Use when user wants to: browse files, see what exists, explore contents, or find available files. By default searches recursively across all directories unless user specifies a specific directory.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "directory": {
+                            "type": "string",
+                            "description": "Directory path to list files from",
+                            "default": "/"
+                        },
+                        "recursive": {
+                            "type": "boolean",
+                            "description": "IMPORTANT: Use true to search all directories (recommended for 'list all files'), false only for specific directory browsing",
+                            "default": True
+                        },
+                        "limit": {
+                            "type": "number",
+                            "description": "Maximum number of files to return",
+                            "default": 10,
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    "required": ["directory", "recursive", "limit"]
+                }
+            },
+            {
+                "name": "append_to_file",
+                "description": "ADD content to the END of existing file. Use for: adding to logs, extending lists, continuing documents, or accumulating data without losing existing content.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "File path (S3-style, no leading slash)"
+                        },
+                        "content": {
+                            "type": "string",
+                            "description": "Content to append to the file"
+                        }
+                    },
+                    "required": ["path", "content"]
+                }
+            },
+            {
+                "name": "overwrite_file",
+                "description": "REPLACE ALL content in existing file. Use when user wants to: completely rewrite, reset, or replace entire file content. Keeps the file but changes everything inside.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "File path (S3-style, no leading slash)"
+                        },
+                        "content": {
+                            "type": "string",
+                            "description": "New content to replace existing content"
+                        },
+                        "isBase64": {
+                            "type": "boolean",
+                            "description": "Whether the content is base64 encoded",
+                            "default": False
+                        }
+                    },
+                    "required": ["path", "content", "isBase64"]
+                }
+            },
+            {
+                "name": "get_file_metadata",
+                "description": "GET file information (size, version, dates) WITHOUT content. Use for: checking file stats, properties, or metadata when content is not needed.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "File path (S3-style, no leading slash)"
+                        },
+                        "version": {
+                            "type": "number",
+                            "description": "Specific version to get metadata for (use 0 for latest version)",
+                            "default": 0
+                        }
+                    },
+                    "required": ["path", "version"]
+                }
+            },
+            {
+                "name": "get_file_versions",
+                "description": "GET version history of a file. Use when user wants to: see file history, list all versions, or access previous versions.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "File path (S3-style, no leading slash)"
+                        },
+                        "limit": {
+                            "type": "number",
+                            "description": "Maximum number of versions to return",
+                            "default": 10,
+                            "minimum": 1,
+                            "maximum": 100
+                        },
+                        "offset": {
+                            "type": "number",
+                            "description": "Number of versions to skip for pagination",
+                            "default": 0,
+                            "minimum": 0
+                        }
+                    },
+                    "required": ["path", "limit", "offset"]
+                }
+            }
+        ]
+
+    async def process_tool_calls(self, response: Any) -> AnthropicProcessedToolCalls:
+        """Process Anthropic tool calls"""
+        results = []
+        handled = False
+
+        # Anthropic format: response.content is an array with tool_use objects
+        content = getattr(response, "content", [])
+        
+        for item in content:
+            if getattr(item, "type", None) == "tool_use" and self._is_openfiles_tool(item.name):
+                handled = True
+                
+                try:
+                    result = await self._execute_tool(item.name, item.input)
+                    
+                    results.append(ToolResult(
+                        tool_call_id=item.id,
+                        function=item.name,
+                        status="success",
+                        data=result,
+                        args=item.input
+                    ))
+                except Exception as error:
+                    results.append(ToolResult(
+                        tool_call_id=item.id,
+                        function=item.name,
+                        status="error",
+                        error=str(error),
+                        args=getattr(item, 'input', {})
+                    ))
+
+        return AnthropicProcessedToolCalls(handled=handled, results=results)
+
+    def _is_openfiles_tool(self, name: str) -> bool:
+        """Check if tool name is an OpenFiles tool"""
+        return name in [
+            'write_file', 'read_file', 'edit_file', 'list_files',
+            'append_to_file', 'overwrite_file', 'get_file_metadata', 'get_file_versions'
+        ]
+
+    async def _execute_tool(self, tool_name: str, args: Dict[str, Any]) -> Any:
+        """Execute a tool call"""
+        result = None
+        
+        if tool_name == "write_file":
+            result = await self.client.write_file(
+                path=args["path"],
+                content=args["content"],
+                content_type=args["contentType"],
+            )
+        elif tool_name == "read_file":
+            response = await self.client.read_file(
+                path=args["path"],
+                version=args["version"] if args["version"] != 0 else None,
+            )
+            return {"path": args["path"], "content": response.data.content, "version": args["version"]}
+        elif tool_name == "edit_file":
+            result = await self.client.edit_file(
+                path=args["path"],
+                old_string=args["oldString"],
+                new_string=args["newString"],
+            )
+        elif tool_name == "list_files":
+            list_params = {
+                "directory": args["directory"],
+                "recursive": args.get("recursive", True),
+                "limit": args["limit"],
+            }
+            logger.debug(f"list_files params: {json.dumps(list_params, indent=2)}")
+            result = await self.client.list_files(**list_params)
+        elif tool_name == "append_to_file":
+            result = await self.client.append_file(
+                path=args["path"],
+                content=args["content"],
+            )
+        elif tool_name == "overwrite_file":
+            result = await self.client.overwrite_file(
+                path=args["path"],
+                content=args["content"],
+                is_base64=args["isBase64"],
+            )
+        elif tool_name == "get_file_metadata":
+            result = await self.client.get_metadata(
+                path=args["path"],
+                version=args["version"] if args["version"] != 0 else None,
+            )
+        elif tool_name == "get_file_versions":
+            result = await self.client.get_versions(
+                path=args["path"],
+                limit=args["limit"],
+                offset=args["offset"],
+            )
+        else:
+            raise ValueError(f"Unknown tool: {tool_name}")
+        
+        # Strip base path from result to make it transparent to AI  
+        return self._strip_base_path(result)

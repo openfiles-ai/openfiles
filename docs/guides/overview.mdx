@@ -1,6 +1,6 @@
 ---
-title: 'SDK Reference'
-description: 'Technical documentation for OpenFiles SDKs.'
+title: 'SDK Overview'
+description: 'Overview of OpenFiles SDKs - import paths, configuration options, and technical reference.'
 ---
 
 ## Import Paths
@@ -11,7 +11,7 @@ description: 'Technical documentation for OpenFiles SDKs.'
 import OpenAI from '@openfiles-ai/sdk/openai'
 
 // Tools integration
-import { createOpenFilesTools } from '@openfiles-ai/sdk/tools'
+import { OpenFilesTools } from '@openfiles-ai/sdk/tools'
 
 // Core client
 import { OpenFilesClient } from '@openfiles-ai/sdk/core'
@@ -22,7 +22,7 @@ import { OpenFilesClient } from '@openfiles-ai/sdk/core'
 from openfiles_ai import OpenAI
 
 # Tools integration
-from openfiles_ai.tools import create_openfiles_tools
+from openfiles_ai.tools import OpenFilesTools
 
 # Core client
 from openfiles_ai import OpenFilesClient
@@ -58,21 +58,29 @@ ai = OpenAI(
 ### Tools Integration
 <CodeGroup>
 ```typescript TypeScript
-const tools = createOpenFilesTools({
+const tools = new OpenFilesTools({
   apiKey: string,                    // OpenFiles API key (required)
   basePath?: string,                 // File path prefix (optional)
   timeout?: number,                  // Request timeout ms (default: 60000)
   maxRetries?: number                // Failed request retries (default: 3)
 })
+
+// Access provider-specific tools
+tools.openai.definitions           // OpenAI tool definitions
+tools.anthropic.definitions        // Anthropic tool definitions
 ```
 
 ```python Python
-tools = create_openfiles_tools(
+tools = OpenFilesTools(
     api_key='oa-...',                # OpenFiles API key (required)
     base_path='my-project',          # File path prefix (optional)
     timeout=60000,                   # Request timeout ms (default: 60000)
     max_retries=3                    # Failed request retries (default: 3)
 )
+
+# Access provider-specific tools
+tools.openai.definitions           # OpenAI tool definitions
+tools.anthropic.definitions        # Anthropic tool definitions
 ```
 </CodeGroup>
 
@@ -167,16 +175,16 @@ except FileOperationError as error:
 | Edge Runtime | ❌ | ✅ | ✅ |
 | Browser | ❌ | ✅ | ✅ |
 
-## Integration Guides
+## Choose Your Integration
 
 <CardGroup cols={3}>
   <Card title="OpenAI Integration" icon="robot" href="/guides/openai-integration">
-    Drop-in replacement for OpenAI SDK
+    **Easiest**: Drop-in replacement for OpenAI SDK with automatic file operations
   </Card>
   <Card title="Tools Integration" icon="wrench" href="/guides/tools-integration">
-    Framework-agnostic tool definitions
+    **Flexible**: Works with any AI provider (OpenAI, Anthropic, etc.)
   </Card>
   <Card title="Core Client" icon="code" href="/guides/core-client">
-    Direct API access and control
+    **Control**: Direct API access for custom integrations
   </Card>
 </CardGroup>

@@ -9,7 +9,7 @@ from typing import Any, Optional, Union
 
 import httpx
 
-from ..utils.logger import get_logger
+from ..utils.logger import logger
 from ..utils.path import resolve_path
 from .exceptions import (
     APIKeyError,
@@ -33,7 +33,7 @@ from .generated.models import (
     WriteFileRequest,
 )
 
-logger = get_logger(__name__)
+# Logger is already imported above
 
 
 class OpenFilesClient:
@@ -83,7 +83,7 @@ class OpenFilesClient:
             timeout=self.timeout,
         )
 
-        logger.debug(f"OpenFiles client initialized with base_url={self.base_url}")
+        logger.info(f"API connected: {self.base_url}{f' (basePath: {self.base_path})' if self.base_path else ''}")
 
     def with_base_path(self, base_path: str) -> "OpenFilesClient":
         """
@@ -140,6 +140,7 @@ class OpenFilesClient:
             NetworkError: If network request fails
         """
         resolved_path = resolve_path(path, base_path or self.base_path)
+        logger.debug(f"Writing file: {resolved_path}")
 
         # Convert content_type to ContentType enum if it's a string
         if isinstance(content_type, str):
@@ -162,6 +163,7 @@ class OpenFilesClient:
             return FileMetadata(**response_data["data"])
 
         except httpx.RequestError as e:
+            logger.error(f"Write failed: Network error during write_file: {str(e)}")
             raise NetworkError(f"Network error during write_file: {str(e)}") from e
 
     async def read_file(
@@ -183,6 +185,7 @@ class OpenFilesClient:
             NetworkError: If network request fails
         """
         resolved_path = resolve_path(path, base_path or self.base_path)
+        logger.debug(f"Reading file: {resolved_path}{f' v{version}' if version else ''}")
 
         params = {}
         if version is not None:
@@ -196,6 +199,7 @@ class OpenFilesClient:
             return FileContentResponse(**response_data)
 
         except httpx.RequestError as e:
+            logger.error(f"Read failed: Network error during read_file: {str(e)}")
             raise NetworkError(f"Network error during read_file: {str(e)}") from e
 
     async def edit_file(
@@ -256,6 +260,8 @@ class OpenFilesClient:
         resolved_dir = resolve_path(directory, base_path or self.base_path)
         if not resolved_dir:
             resolved_dir = ""
+        
+        logger.debug(f"Listing files in: {resolved_dir or '/'}")
 
         params = {"directory": resolved_dir, "limit": str(limit), "offset": str(offset)}
         if recursive:
@@ -269,6 +275,7 @@ class OpenFilesClient:
             return FileListResponse(**response_data)
 
         except httpx.RequestError as e:
+            logger.error(f"List failed: Network error during list_files: {str(e)}")
             raise NetworkError(f"Network error during list_files: {str(e)}") from e
 
     async def append_file(

@@ -1,5 +1,5 @@
 /**
- * @openfiles/sdk/core
+ * @openfiles-ai/sdk/core
  * 
  * Direct API client for OpenFiles platform
  */

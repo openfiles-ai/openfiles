@@ -5,7 +5,7 @@ description: 'Framework-agnostic file tools for any AI provider'
 
 # AI Framework Tools
 
-Use OpenFiles with any AI provider that supports tool calling - Anthropic Claude, Google Gemini, Cohere, and more.
+Use OpenFiles with any AI provider that supports tool calling - OpenAI, Anthropic Claude, and more. Support for Google Gemini and Cohere coming soon.
 
 ## How It Works
 
@@ -16,38 +16,72 @@ Use OpenFiles with any AI provider that supports tool calling - Anthropic Claude
 
 ## Features
 
-- ✅ **Universal Compatibility** - Works with any AI framework
-- ✅ **Standard Tool Format** - OpenAI-compatible tool definitions
+- ✅ **Multi-Provider Support** - Works with OpenAI, Anthropic, and more
+- ✅ **Provider-Specific APIs** - Optimized for each AI provider's format
 - ✅ **Selective Processing** - Only handles OpenFiles tools
 - ✅ **Automatic Execution** - File operations happen seamlessly
 - ✅ **Rich Error Handling** - Comprehensive error management
 
 ## Installation
 
-<Tabs>
-  <Tab title="npm">
-    ```bash
-    npm install @openfiles-ai/sdk
-    ```
-  </Tab>
-  <Tab title="yarn">
-    ```bash
-    yarn add @openfiles-ai/sdk
-    ```
-  </Tab>
-  <Tab title="pnpm">
-    ```bash
-    pnpm add @openfiles-ai/sdk
-    ```
-  </Tab>
-  <Tab title="pip">
-    ```bash
-    pip install openfiles-ai
-    ```
-  </Tab>
-</Tabs>
+Refer to the [SDK Overview](/guides/overview#import-paths) for installation instructions and import paths.
 
 ## Framework Examples
+
+### OpenAI
+
+<CodeGroup>
+```typescript TypeScript
+import { OpenFilesTools } from '@openfiles-ai/sdk/tools'
+import OpenAI from 'openai'
+
+const tools = new OpenFilesTools({ 
+  apiKey: process.env.OPENFILES_API_KEY 
+})
+const openai = new OpenAI({ 
+  apiKey: process.env.OPENAI_API_KEY 
+})
+
+// Add OpenFiles tools to OpenAI
+const response = await openai.chat.completions.create({
+  model: 'gpt-4',
+  messages: [{
+    role: 'user',
+    content: 'Create a vacation itinerary for 5 days in Paris and save it as paris-trip.md'
+  }],
+  tools: tools.openai.definitions
+})
+
+// Process file operations
+const processed = await tools.openai.processToolCalls(response)
+if (processed.handled) {
+  console.log(`✅ Handled ${processed.results.length} file operations`)
+}
+```
+
+```python Python
+from openfiles_ai.tools import OpenFilesTools
+import openai
+
+tools = OpenFilesTools(api_key=os.getenv('OPENFILES_API_KEY'))
+client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+# Add OpenFiles tools to OpenAI
+response = client.chat.completions.create(
+    model='gpt-4',
+    messages=[{
+        'role': 'user',
+        'content': 'Create a vacation itinerary for 5 days in Paris and save it as paris-trip.md'
+    }],
+    tools=tools.openai.definitions
+)
+
+# Process file operations
+processed = await tools.openai.process_tool_calls(response)
+if processed.handled:
+    print(f'✅ Handled {len(processed.results)} file operations')
+```
+</CodeGroup>
 
 ### Anthropic Claude
 
@@ -65,17 +99,17 @@ const anthropic = new Anthropic({
 
 // Add OpenFiles tools to Claude
 const response = await anthropic.messages.create({
-  model: 'claude-3-5-sonnet-20241022',
+  model: 'claude-sonnet-4-20250514',
   max_tokens: 1024,
   messages: [{
     role: 'user',
     content: 'Create a vacation itinerary for 5 days in Paris and save it as paris-trip.md'
   }],
-  tools: tools.definitions
+  tools: tools.anthropic.definitions
 })
 
 // Process file operations
-const processed = await tools.processToolCalls(response)
+const processed = await tools.anthropic.processToolCalls(response)
 if (processed.handled) {
   console.log(`✅ Handled ${processed.results.length} file operations`)
 }
@@ -90,116 +124,29 @@ client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
 
 # Add OpenFiles tools to Claude
 response = client.messages.create(
-    model='claude-3-5-sonnet-20241022',
+    model='claude-sonnet-4-20250514',
     max_tokens=1024,
     messages=[{
         'role': 'user',
         'content': 'Create a vacation itinerary for 5 days in Paris and save it as paris-trip.md'
     }],
-    tools=tools.definitions
+    tools=tools.anthropic.definitions
 )
 
 # Process file operations
-processed = await tools.process_tool_calls(response)
+processed = await tools.anthropic.process_tool_calls(response)
 if processed.handled:
     print(f'✅ Handled {len(processed.results)} file operations')
 ```
 </CodeGroup>
 
-### Google Gemini
+### Coming Soon
 
-<CodeGroup>
-```typescript TypeScript
-import { OpenFilesTools } from '@openfiles-ai/sdk/tools'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+#### Google Gemini
+*Integration with Google Gemini coming soon - stay tuned for updates!*
 
-const tools = new OpenFilesTools({ 
-  apiKey: process.env.OPENFILES_API_KEY 
-})
-const genai = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY)
-
-// Add OpenFiles tools to Gemini
-const model = genai.getGenerativeModel({
-  model: 'gemini-1.5-pro',
-  tools: [{ functionDeclarations: tools.definitions }]
-})
-
-const response = await model.generateContent({
-  contents: [{
-    role: 'user',
-    parts: [{ text: 'Write a meal plan for the week with healthy recipes and save it as meal-plan.md' }]
-  }]
-})
-
-// Process file operations
-const processed = await tools.processToolCalls(response)
-```
-
-```python Python
-from openfiles_ai.tools import OpenFilesTools
-import google.generativeai as genai
-
-tools = OpenFilesTools(api_key=os.getenv('OPENFILES_API_KEY'))
-genai.configure(api_key=os.getenv('GOOGLE_AI_API_KEY'))
-
-# Add OpenFiles tools to Gemini
-model = genai.GenerativeModel(
-    model_name='gemini-1.5-pro',
-    tools=[{'function_declarations': tools.definitions}]
-)
-
-response = model.generate_content(
-    'Write a meal plan for the week with healthy recipes and save it as meal-plan.md'
-)
-
-# Process file operations
-processed = await tools.process_tool_calls(response)
-```
-</CodeGroup>
-
-### Cohere
-
-<CodeGroup>
-```typescript TypeScript
-import { OpenFilesTools } from '@openfiles-ai/sdk/tools'
-import { CohereClient } from 'cohere-ai'
-
-const tools = new OpenFilesTools({ 
-  apiKey: process.env.OPENFILES_API_KEY 
-})
-const cohere = new CohereClient({
-  token: process.env.COHERE_API_KEY
-})
-
-// Add OpenFiles tools to Cohere
-const response = await cohere.chat({
-  model: 'command-r-plus',
-  message: 'Create a birthday party checklist and save it as party-checklist.md',
-  tools: tools.definitions
-})
-
-// Process file operations  
-const processed = await tools.processToolCalls(response)
-```
-
-```python Python
-from openfiles_ai.tools import OpenFilesTools
-import cohere
-
-tools = OpenFilesTools(api_key=os.getenv('OPENFILES_API_KEY'))
-co = cohere.Client(api_key=os.getenv('COHERE_API_KEY'))
-
-# Add OpenFiles tools to Cohere
-response = co.chat(
-    model='command-r-plus',
-    message='Create a birthday party checklist and save it as party-checklist.md',
-    tools=tools.definitions
-)
-
-# Process file operations
-processed = await tools.process_tool_calls(response)
-```
-</CodeGroup>
+#### Cohere
+*Integration with Cohere coming soon - stay tuned for updates!*
 
 ## Available Tools
 
@@ -265,6 +212,11 @@ const tools = new OpenFilesTools({
     // Custom error handling, retries, notifications
   }
 })
+
+// Use provider-specific processing
+const processed = await tools.openai.processToolCalls(response)
+// OR
+const processed = await tools.anthropic.processToolCalls(response)
 ```
 
 ```python Python
@@ -281,6 +233,11 @@ tools = OpenFilesTools(
     on_file_operation=on_file_operation,
     on_error=on_error
 )
+
+# Use provider-specific processing
+processed = await tools.openai.process_tool_calls(response)
+# OR
+processed = await tools.anthropic.process_tool_calls(response)
 ```
 </CodeGroup>
 
@@ -312,7 +269,9 @@ const shoppingAgent = new OpenFilesTools({
 <CodeGroup>
 ```typescript TypeScript
 try {
-  const processed = await tools.processToolCalls(response)
+  // Use the appropriate provider method
+  const processed = await tools.openai.processToolCalls(response)
+  // OR for Anthropic: const processed = await tools.anthropic.processToolCalls(response)
   
   for (const result of processed.results) {
     if (result.status === 'success') {
@@ -328,7 +287,9 @@ try {
 
 ```python Python
 try:
-    processed = await tools.process_tool_calls(response)
+    # Use the appropriate provider method
+    processed = await tools.openai.process_tool_calls(response)
+    # OR for Anthropic: processed = await tools.anthropic.process_tool_calls(response)
     
     for result in processed.results:
         if result.status == 'success':
@@ -340,6 +301,18 @@ except Exception as error:
     print(f'Tool processing failed: {error}')
 ```
 </CodeGroup>
+
+## When to Use Tools Integration
+
+**Choose Tools Integration when:**
+- You're using multiple AI providers (OpenAI, Anthropic, etc.)
+- You want framework-agnostic file operations
+- You need fine-grained control over tool processing
+- You're building custom AI workflows
+
+**Consider alternatives:**
+- **[OpenAI Integration](/guides/openai-integration)** - If you only use OpenAI and want automatic setup
+- **[Core Client](/guides/core-client)** - If you need direct file operations without AI tools
 
 ## Next Steps
 

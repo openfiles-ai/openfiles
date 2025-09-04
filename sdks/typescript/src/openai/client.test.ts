@@ -35,76 +35,67 @@ vi.mock('../core', () => ({
 }))
 
 const mockTools = {
-  definitions: [
-    { type: 'function', function: { name: 'write_file' } },
-    { type: 'function', function: { name: 'read_file' } },
-    { type: 'function', function: { name: 'edit_file' } },
-    { type: 'function', function: { name: 'list_files' } },
-    { type: 'function', function: { name: 'append_to_file' } },
-    { type: 'function', function: { name: 'overwrite_file' } },
-    { type: 'function', function: { name: 'get_file_metadata' } },
-    { type: 'function', function: { name: 'get_file_versions' } }
-  ],
-  isOpenFilesTool: vi.fn().mockImplementation((name) => {
-    const tools = ['write_file', 'read_file', 'edit_file', 'list_files', 
-                   'append_to_file', 'overwrite_file', 'get_file_metadata', 'get_file_versions']
-    return tools.includes(name)
-  }),
-  processToolCalls: vi.fn().mockImplementation(async (response) => {
-    const results = []
-    for (const choice of response.choices || []) {
-      const toolCalls = choice.message?.tool_calls || []
-      for (const toolCall of toolCalls) {
-        const args = JSON.parse(toolCall.function.arguments)
-        if (mockTools.isOpenFilesTool(toolCall.function.name)) {
-          try {
-            if (toolCall.function.name === 'write_file') {
-              const result = await mockClient.writeFile(args)
+  openai: {
+    definitions: [
+      { type: 'function', function: { name: 'write_file' } },
+      { type: 'function', function: { name: 'read_file' } },
+      { type: 'function', function: { name: 'edit_file' } },
+      { type: 'function', function: { name: 'list_files' } },
+      { type: 'function', function: { name: 'append_to_file' } },
+      { type: 'function', function: { name: 'overwrite_file' } },
+      { type: 'function', function: { name: 'get_file_metadata' } },
+      { type: 'function', function: { name: 'get_file_versions' } }
+    ],
+    _isOpenFilesTool: vi.fn().mockImplementation((name) => {
+      const tools = ['write_file', 'read_file', 'edit_file', 'list_files', 
+                     'append_to_file', 'overwrite_file', 'get_file_metadata', 'get_file_versions']
+      return tools.includes(name)
+    }),
+    processToolCalls: vi.fn().mockImplementation(async (response) => {
+      const results = []
+      for (const choice of response.choices || []) {
+        const toolCalls = choice.message?.tool_calls || []
+        for (const toolCall of toolCalls) {
+          const args = JSON.parse(toolCall.function.arguments)
+          if (mockTools.openai._isOpenFilesTool(toolCall.function.name)) {
+            try {
+              if (toolCall.function.name === 'write_file') {
+                const result = await mockClient.writeFile(args)
+                results.push({
+                  toolCallId: toolCall.id,
+                  status: 'success',
+                  data: { ...result, path: args.path },
+                  function: toolCall.function.name,
+                  args: args
+                })
+              } else {
+                results.push({
+                  toolCallId: toolCall.id,
+                  status: 'success',
+                  data: { path: args.path || 'test.txt', version: 1 },
+                  function: toolCall.function.name,
+                  args: args
+                })
+              }
+            } catch (error) {
               results.push({
                 toolCallId: toolCall.id,
-                status: 'success',
-                data: { ...result, path: args.path },
-                function: toolCall.function.name,
-                args: args
-              })
-            } else {
-              results.push({
-                toolCallId: toolCall.id,
-                status: 'success',
-                data: { path: args.path || 'test.txt', version: 1 },
+                status: 'error',
+                error: error.message,
                 function: toolCall.function.name,
                 args: args
               })
             }
-          } catch (error) {
-            results.push({
-              toolCallId: toolCall.id,
-              status: 'error',
-              error: error.message,
-              function: toolCall.function.name,
-              args: args
-            })
           }
         }
       }
-    }
-    return {
-      handled: results.length > 0,
-      results,
-      originalResponse: response
-    }
-  }),
-  executeTool: vi.fn().mockImplementation(async (toolCall) => {
-    const args = JSON.parse(toolCall.function.arguments)
-    switch (toolCall.function.name) {
-      case 'write_file': {
-        const result = await mockClient.writeFile(args)
-        return { ...result, path: args.path } // Ensure path matches arguments
+      return {
+        handled: results.length > 0,
+        results,
+        originalResponse: response
       }
-      default:
-        return { path: args.path || 'test.txt', version: 1 }
-    }
-  })
+    })
+  }
 }
 
 vi.mock('../tools', () => ({
@@ -168,14 +159,14 @@ describe('OpenAI', () => {
       ]
 
       tools.forEach(tool => {
-        expect((ai as any).toolsInstance.isOpenFilesTool(tool)).toBe(true)
+        expect((ai as any).toolsInstance.openai._isOpenFilesTool(tool)).toBe(true)
       })
     })
 
     it('should reject non-OpenFiles tools', () => {
       const nonTools = ['custom_tool', 'get_weather', 'send_email']
       nonTools.forEach(tool => {
-        expect((ai as any).toolsInstance.isOpenFilesTool(tool)).toBe(false)
+        expect((ai as any).toolsInstance.openai._isOpenFilesTool(tool)).toBe(false)
       })
     })
   })

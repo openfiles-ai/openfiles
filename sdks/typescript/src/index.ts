@@ -1,14 +1,14 @@
 /**
- * @openfiles/sdk
+ * @openfiles-ai/sdk
  * 
  * OpenFiles SDK - AI-native file storage platform
  * 
  * @example
  * ```typescript
  * // Import what you need from single package
- * import { OpenFilesClient } from '@openfiles/sdk/core'
- * import OpenAI from '@openfiles/sdk/openai'  // Drop-in OpenAI replacement
- * import { OpenFilesTools } from '@openfiles/sdk/tools'
+ * import { OpenFilesClient } from '@openfiles-ai/sdk/core'
+ * import OpenAI from '@openfiles-ai/sdk/openai'  // Drop-in OpenAI replacement
+ * import { OpenFilesTools } from '@openfiles-ai/sdk/tools'
  * ```
  */
 
@@ -49,6 +49,5 @@ export type {
   // Tools types
   ToolDefinition,
   ToolResult,
-  ProcessedToolCalls,
-  ToolCall
+  ProcessedToolCalls
 } from './tools'

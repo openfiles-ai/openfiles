@@ -1,6 +1,6 @@
 # OpenFiles AI Chat Application
 
-Complete Next.js chat application demonstrating the `@openfiles/sdk/openai` drop-in replacement module.
+Complete Next.js chat application demonstrating the `@openfiles-ai/sdk/openai` drop-in replacement module.
 
 ## Quick Start
 
@@ -58,7 +58,7 @@ Then set `OPENFILES_BASE_URL=http://localhost:54321/functions/v1/api` in your `.
 - **Real-time Chat**: Smooth experience with loading states and auto-scroll
 
 ### AI Integration
-- **Drop-in Replacement**: Uses `@openfiles/sdk/openai` instead of standard OpenAI
+- **Drop-in Replacement**: Uses `@openfiles-ai/sdk/openai` instead of standard OpenAI
 - **Automatic Tool Execution**: Zero configuration file operations
 - **Session Isolation**: Each chat session has its own file workspace
 - **Transparent Operations**: See AI tool usage with collapsible details
@@ -152,7 +152,7 @@ types/
 ## Key Features Demonstrated
 
 ### Drop-in OpenAI Replacement
-- Change only the import: `from '@openfiles/sdk/openai'`
+- Change only the import: `from '@openfiles-ai/sdk/openai'`
 - All existing OpenAI code works unchanged
 - Automatic file tool injection and execution
 - Zero configuration required

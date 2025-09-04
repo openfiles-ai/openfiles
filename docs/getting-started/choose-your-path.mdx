@@ -8,7 +8,7 @@ description: 'Select the integration method that matches your current setup and 
 | Your Current Setup | Recommended Path | Why Choose This | Setup Time |
 |-------------------|------------------|-----------------|------------|
 | **Already using OpenAI SDK** | **OpenAI Integration** | Drop-in replacement, minimal changes | 2 minutes |
-| **Using other AI providers** (Claude, Gemini, Cohere, etc.) | **Tools Integration** | Framework-agnostic, works with any AI | 5 minutes |
+| **Using other AI providers** (Claude, Anthropic, etc.) | **Tools Integration** | Framework-agnostic, works with any AI | 5 minutes |
 | **No AI framework** or want direct control | **Core Client** | Full control, no AI dependencies | 5 minutes |
 | **Building custom API** or prefer REST calls | **REST API** | Maximum flexibility, any language | 5 minutes |
 
@@ -49,44 +49,48 @@ ai = OpenAI(
 
 ### Tools
 
-**When to use**: You're using other AI providers or multiple frameworks
+**When to use**: You're using Anthropic Claude, multiple AI providers, or need framework flexibility
 
 <CodeGroup>
 ```typescript TypeScript
-import { createOpenFilesTools } from '@openfiles-ai/sdk/tools'
+import { OpenFilesTools } from '@openfiles-ai/sdk/tools'
+import Anthropic from '@anthropic-ai/sdk'
 
-const tools = createOpenFilesTools({ apiKey: 'oa-...' })
+const tools = new OpenFilesTools({ apiKey: 'oa-...' })
+const anthropic = new Anthropic({ apiKey: 'ant-...' })
 
-// Use with any AI provider
+// Use with Anthropic Claude
 const response = await anthropic.messages.create({
-  model: 'claude-3-sonnet',
+  model: 'claude-sonnet-4-20250514',
   messages: [...],
-  tools: tools.definitions
+  tools: tools.anthropic.definitions
 })
 
 // Process file operations
-await tools.handleToolCalls(response.tool_calls)
+const processed = await tools.anthropic.processToolCalls(response)
 ```
 
 ```python Python
-from openfiles_ai.tools import create_openfiles_tools
+from openfiles_ai.tools import OpenFilesTools
+import anthropic
 
-tools = create_openfiles_tools(api_key='oa-...')
+tools = OpenFilesTools(api_key='oa-...')
+client = anthropic.Anthropic(api_key='ant-...')
 
-# Use with any AI provider
+# Use with Anthropic Claude
 response = client.messages.create(
-    model='claude-3-sonnet',
+    model='claude-sonnet-4-20250514',
     messages=[...],
-    tools=tools.definitions
+    tools=tools.anthropic.definitions
 )
 
 # Process file operations
-await tools.handle_tool_calls(response.tool_calls)
+processed = await tools.anthropic.process_tool_calls(response)
 ```
 </CodeGroup>
 
-- ✅ Works with any AI provider
-- ✅ Standard tool format
+- ✅ Works with OpenAI, Anthropic, and more
+- ✅ Provider-specific optimizations
 - ✅ Mix with your custom tools
 - ❌ Requires manual tool handling
 

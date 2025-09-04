@@ -15,6 +15,8 @@ from typing import Any, Dict
 
 from dotenv import load_dotenv
 
+# Load environment variables first, before importing OpenFiles modules
+load_dotenv()
 from openfiles_ai import OpenAI
 from shared.session_utils import generate_session_id, create_session_paths, print_session_info
 
@@ -263,7 +265,6 @@ async def update_config(ai: OpenAI, config_path: str, updates: str) -> Any:
 
 def main() -> None:
     """Run the example if called directly"""
-    load_dotenv()
     asyncio.run(openai_integration_example())
 
 

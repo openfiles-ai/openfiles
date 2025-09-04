@@ -14,7 +14,7 @@ from openfiles_ai.core.generated.models import (
     FileMetadata,
 )
 from openfiles_ai.tools import OpenFilesTools
-from openfiles_ai.tools.tools import ProcessedToolCalls, ToolCall, ToolDefinition, ToolResult
+from openfiles_ai.tools.tools import ProcessedToolCalls, AnthropicProcessedToolCalls, ToolCall, ToolDefinition, ToolResult
 
 
 class TestToolDefinition:
@@ -172,9 +172,9 @@ class TestOpenFilesTools:
         # Original instance should be unchanged
         assert tools.base_path is None
 
-    def test_definitions_structure(self, tools):
+    def test_openai_definitions_structure(self, tools):
         """Should return OpenAI-compatible tool definitions"""
-        definitions = tools.definitions
+        definitions = tools.openai.definitions
 
         assert len(definitions) == 8
         assert definitions[0].function["name"] == "write_file"
@@ -197,259 +197,247 @@ class TestOpenFilesTools:
             assert "properties" in tool_dict["function"]["parameters"]
             assert "required" in tool_dict["function"]["parameters"]
 
-    def test_is_openfiles_tool(self, tools):
-        """Should identify OpenFiles tools correctly"""
-        assert tools._is_openfiles_tool("write_file") is True
-        assert tools._is_openfiles_tool("read_file") is True
-        assert tools._is_openfiles_tool("edit_file") is True
-        assert tools._is_openfiles_tool("list_files") is True
-        assert tools._is_openfiles_tool("append_to_file") is True
-        assert tools._is_openfiles_tool("overwrite_file") is True
-        assert tools._is_openfiles_tool("get_file_metadata") is True
-        assert tools._is_openfiles_tool("get_file_versions") is True
+    def test_anthropic_definitions_structure(self, tools):
+        """Should return Anthropic-compatible tool definitions"""
+        definitions = tools.anthropic.definitions
 
-    def test_is_not_openfiles_tool(self, tools):
-        """Should reject non-OpenFiles tools"""
-        assert tools._is_openfiles_tool("some_other_tool") is False
-        assert tools._is_openfiles_tool("get_weather") is False
-        assert tools._is_openfiles_tool("") is False
-        assert tools._is_openfiles_tool("invalid_tool") is False
+        assert len(definitions) == 8
+        assert definitions[0]["name"] == "write_file"
+        assert definitions[1]["name"] == "read_file"
+        assert definitions[2]["name"] == "edit_file"
+        assert definitions[3]["name"] == "list_files"
+        assert definitions[4]["name"] == "append_to_file"
+        assert definitions[5]["name"] == "overwrite_file"
+        assert definitions[6]["name"] == "get_file_metadata"
+        assert definitions[7]["name"] == "get_file_versions"
+
+        # Check Anthropic structure (flat with input_schema)
+        for definition in definitions:
+            assert "name" in definition
+            assert "description" in definition
+            assert "input_schema" in definition
+            assert definition["input_schema"]["type"] == "object"
+            assert "properties" in definition["input_schema"]
+            assert "required" in definition["input_schema"]
+
+    def test_openai_provider_has_correct_structure(self, tools):
+        """Should have openai provider with correct methods"""
+        assert hasattr(tools, 'openai')
+        assert hasattr(tools.openai, 'definitions')
+        assert hasattr(tools.openai, 'process_tool_calls')
+        assert hasattr(tools.openai, '_is_openfiles_tool')
+
+    def test_anthropic_provider_has_correct_structure(self, tools):
+        """Should have anthropic provider with correct methods"""
+        assert hasattr(tools, 'anthropic')
+        assert hasattr(tools.anthropic, 'definitions')
+        assert hasattr(tools.anthropic, 'process_tool_calls')
+        assert hasattr(tools.anthropic, '_is_openfiles_tool')
+
+    def test_openai_is_openfiles_tool(self, tools):
+        """Should identify OpenFiles tools correctly in OpenAI provider"""
+        assert tools.openai._is_openfiles_tool("write_file") is True
+        assert tools.openai._is_openfiles_tool("read_file") is True
+        assert tools.openai._is_openfiles_tool("edit_file") is True
+        assert tools.openai._is_openfiles_tool("list_files") is True
+        assert tools.openai._is_openfiles_tool("append_to_file") is True
+        assert tools.openai._is_openfiles_tool("overwrite_file") is True
+        assert tools.openai._is_openfiles_tool("get_file_metadata") is True
+        assert tools.openai._is_openfiles_tool("get_file_versions") is True
+
+    def test_openai_is_not_openfiles_tool(self, tools):
+        """Should reject non-OpenFiles tools in OpenAI provider"""
+        assert tools.openai._is_openfiles_tool("some_other_tool") is False
+        assert tools.openai._is_openfiles_tool("get_weather") is False
+        assert tools.openai._is_openfiles_tool("") is False
+        assert tools.openai._is_openfiles_tool("invalid_tool") is False
+
+    def test_anthropic_is_openfiles_tool(self, tools):
+        """Should identify OpenFiles tools correctly in Anthropic provider"""
+        assert tools.anthropic._is_openfiles_tool("write_file") is True
+        assert tools.anthropic._is_openfiles_tool("read_file") is True
+        assert tools.anthropic._is_openfiles_tool("edit_file") is True
+        assert tools.anthropic._is_openfiles_tool("list_files") is True
+        assert tools.anthropic._is_openfiles_tool("append_to_file") is True
+        assert tools.anthropic._is_openfiles_tool("overwrite_file") is True
+        assert tools.anthropic._is_openfiles_tool("get_file_metadata") is True
+        assert tools.anthropic._is_openfiles_tool("get_file_versions") is True
+
+    def test_anthropic_is_not_openfiles_tool(self, tools):
+        """Should reject non-OpenFiles tools in Anthropic provider"""
+        assert tools.anthropic._is_openfiles_tool("some_other_tool") is False
+        assert tools.anthropic._is_openfiles_tool("get_weather") is False
+        assert tools.anthropic._is_openfiles_tool("") is False
+        assert tools.anthropic._is_openfiles_tool("invalid_tool") is False
 
     @pytest.mark.asyncio
-    async def test_execute_write_file_tool(self, tools, mock_client, sample_file_metadata):
-        """Should execute write_file tool correctly"""
+    async def test_openai_execute_write_file_tool(self, tools, mock_client, sample_file_metadata):
+        """Should execute write_file tool correctly via OpenAI provider"""
         mock_client.write_file.return_value = sample_file_metadata
-
-        tool_call = ToolCall(
-            id="call-123",
-            function_name="write_file",
-            arguments=json.dumps(
-                {"path": "test.txt", "content": "Hello World", "contentType": "text/plain"}
-            ),
-        )
-
-        result = await tools._execute_tool(tool_call)
+        
+        args = {"path": "test.txt", "content": "Hello World", "contentType": "text/plain"}
+        result = await tools.openai._execute_tool("write_file", args)
 
         mock_client.write_file.assert_called_once_with(
-            path="test.txt", content="Hello World", content_type="text/plain", base_path=None
+            path="test.txt", content="Hello World", content_type="text/plain"
         )
         assert result == sample_file_metadata
 
     @pytest.mark.asyncio
-    async def test_execute_read_file_tool(self, tools, mock_client):
-        """Should execute read_file tool correctly"""
-        mock_content_response = MagicMock()
-        mock_content_response.data.content = "File content"
-        mock_client.read_file.return_value = mock_content_response
+    async def test_openai_execute_read_file_tool(self, tools, mock_client):
+        """Should execute read_file tool correctly via OpenAI provider"""
+        mock_client.read_file.return_value = "File content"
 
-        tool_call = ToolCall(
-            id="call-123",
-            function_name="read_file",
-            arguments=json.dumps({"path": "test.txt", "version": 0}),
-        )
+        args = {"path": "test.txt", "version": 0}
+        result = await tools.openai._execute_tool("read_file", args)
 
-        result = await tools._execute_tool(tool_call)
-
-        mock_client.read_file.assert_called_once_with(path="test.txt", version=None, base_path=None)
+        mock_client.read_file.assert_called_once_with(path="test.txt", version=None)
         assert result == {"path": "test.txt", "content": "File content", "version": 0}
 
     @pytest.mark.asyncio
-    async def test_execute_read_file_with_version(self, tools, mock_client):
-        """Should execute read_file tool with specific version"""
-        mock_content_response = MagicMock()
-        mock_content_response.data.content = "File content v2"
-        mock_client.read_file.return_value = mock_content_response
+    async def test_openai_execute_read_file_with_version(self, tools, mock_client):
+        """Should execute read_file tool with specific version via OpenAI provider"""
+        mock_client.read_file.return_value = "File content v2"
 
-        tool_call = ToolCall(
-            id="call-123",
-            function_name="read_file",
-            arguments=json.dumps({"path": "test.txt", "version": 2}),
-        )
+        args = {"path": "test.txt", "version": 2}
+        result = await tools.openai._execute_tool("read_file", args)
 
-        result = await tools._execute_tool(tool_call)
-
-        mock_client.read_file.assert_called_once_with(path="test.txt", version=2, base_path=None)
+        mock_client.read_file.assert_called_once_with(path="test.txt", version=2)
         assert result["version"] == 2
 
     @pytest.mark.asyncio
-    async def test_execute_edit_file_tool(self, tools, mock_client, sample_file_metadata):
-        """Should execute edit_file tool correctly"""
+    async def test_openai_execute_edit_file_tool(self, tools, mock_client, sample_file_metadata):
+        """Should execute edit_file tool correctly via OpenAI provider"""
         mock_client.edit_file.return_value = sample_file_metadata
 
-        tool_call = ToolCall(
-            id="call-123",
-            function_name="edit_file",
-            arguments=json.dumps(
-                {"path": "test.txt", "oldString": "Hello", "newString": "Hi"}
-            ),
-        )
-
-        result = await tools._execute_tool(tool_call)
+        args = {"path": "test.txt", "oldString": "Hello", "newString": "Hi"}
+        result = await tools.openai._execute_tool("edit_file", args)
 
         mock_client.edit_file.assert_called_once_with(
-            path="test.txt", old_string="Hello", new_string="Hi", base_path=None
+            path="test.txt", old_string="Hello", new_string="Hi"
         )
         assert result == sample_file_metadata
 
     @pytest.mark.asyncio
-    async def test_execute_list_files_tool(self, tools, mock_client):
-        """Should execute list_files tool correctly"""
+    async def test_openai_execute_list_files_tool(self, tools, mock_client):
+        """Should execute list_files tool correctly via OpenAI provider"""
         mock_list_response = MagicMock()
         mock_client.list_files.return_value = mock_list_response
 
-        tool_call = ToolCall(
-            id="call-123",
-            function_name="list_files",
-            arguments=json.dumps({"directory": "docs/", "limit": 20}),
-        )
-
-        result = await tools._execute_tool(tool_call)
+        args = {"directory": "docs/", "limit": 20, "recursive": False}
+        result = await tools.openai._execute_tool("list_files", args)
 
         mock_client.list_files.assert_called_once_with(
-            directory="docs/", limit=20, base_path=None
+            directory="docs/", limit=20, recursive=False
         )
         assert result == mock_list_response
 
     @pytest.mark.asyncio
-    async def test_execute_append_to_file_tool(self, tools, mock_client, sample_file_metadata):
-        """Should execute append_to_file tool correctly"""
+    async def test_openai_execute_append_to_file_tool(self, tools, mock_client, sample_file_metadata):
+        """Should execute append_to_file tool correctly via OpenAI provider"""
         mock_client.append_file.return_value = sample_file_metadata
 
-        tool_call = ToolCall(
-            id="call-123",
-            function_name="append_to_file",
-            arguments=json.dumps({"path": "log.txt", "content": "\nNew log entry"}),
-        )
-
-        result = await tools._execute_tool(tool_call)
+        args = {"path": "log.txt", "content": "\nNew log entry"}
+        result = await tools.openai._execute_tool("append_to_file", args)
 
         mock_client.append_file.assert_called_once_with(
-            path="log.txt", content="\nNew log entry", base_path=None
+            path="log.txt", content="\nNew log entry"
         )
         assert result == sample_file_metadata
 
     @pytest.mark.asyncio
-    async def test_execute_overwrite_file_tool(self, tools, mock_client, sample_file_metadata):
-        """Should execute overwrite_file tool correctly"""
+    async def test_openai_execute_overwrite_file_tool(self, tools, mock_client, sample_file_metadata):
+        """Should execute overwrite_file tool correctly via OpenAI provider"""
         mock_client.overwrite_file.return_value = sample_file_metadata
 
-        tool_call = ToolCall(
-            id="call-123",
-            function_name="overwrite_file",
-            arguments=json.dumps(
-                {"path": "config.json", "content": '{"new": "config"}', "isBase64": False}
-            ),
-        )
-
-        result = await tools._execute_tool(tool_call)
+        args = {"path": "config.json", "content": '{"new": "config"}', "isBase64": False}
+        result = await tools.openai._execute_tool("overwrite_file", args)
 
         mock_client.overwrite_file.assert_called_once_with(
-            path="config.json", content='{"new": "config"}', is_base64=False, base_path=None
+            path="config.json", content='{"new": "config"}', is_base64=False
         )
         assert result == sample_file_metadata
 
     @pytest.mark.asyncio
-    async def test_execute_get_file_metadata_tool(self, tools, mock_client):
-        """Should execute get_file_metadata tool correctly"""
+    async def test_openai_execute_get_file_metadata_tool(self, tools, mock_client):
+        """Should execute get_file_metadata tool correctly via OpenAI provider"""
         mock_metadata_response = MagicMock()
         mock_client.get_metadata.return_value = mock_metadata_response
 
-        tool_call = ToolCall(
-            id="call-123",
-            function_name="get_file_metadata",
-            arguments=json.dumps({"path": "test.txt", "version": 0}),
-        )
-
-        result = await tools._execute_tool(tool_call)
+        args = {"path": "test.txt", "version": 0}
+        result = await tools.openai._execute_tool("get_file_metadata", args)
 
         mock_client.get_metadata.assert_called_once_with(
-            path="test.txt", version=None, base_path=None
+            path="test.txt", version=None
         )
         assert result == mock_metadata_response
 
     @pytest.mark.asyncio
-    async def test_execute_get_file_versions_tool(self, tools, mock_client):
-        """Should execute get_file_versions tool correctly"""
+    async def test_openai_execute_get_file_versions_tool(self, tools, mock_client):
+        """Should execute get_file_versions tool correctly via OpenAI provider"""
         mock_versions_response = MagicMock()
         mock_client.get_versions.return_value = mock_versions_response
 
-        tool_call = ToolCall(
-            id="call-123",
-            function_name="get_file_versions",
-            arguments=json.dumps({"path": "test.txt", "limit": 10, "offset": 0}),
-        )
-
-        result = await tools._execute_tool(tool_call)
+        args = {"path": "test.txt", "limit": 10, "offset": 0}
+        result = await tools.openai._execute_tool("get_file_versions", args)
 
         mock_client.get_versions.assert_called_once_with(
-            path="test.txt", limit=10, offset=0, base_path=None
+            path="test.txt", limit=10, offset=0
         )
         assert result == mock_versions_response
 
     @pytest.mark.asyncio
-    async def test_execute_tool_with_base_path(self, mock_client, sample_file_metadata):
-        """Should execute tools with base path"""
+    async def test_openai_execute_tool_with_base_path(self, mock_client, sample_file_metadata):
+        """Should execute tools with base path via OpenAI provider"""
+        # Mock the with_base_path method
+        mock_client_with_path = AsyncMock()
+        mock_client_with_path.write_file.return_value = sample_file_metadata
+        mock_client.with_base_path.return_value = mock_client_with_path
+        
         tools = OpenFilesTools(mock_client, "projects/website")
-        mock_client.write_file.return_value = sample_file_metadata
+        
+        args = {"path": "index.html", "content": "<html></html>", "contentType": "text/html"}
+        await tools.openai._execute_tool("write_file", args)
 
-        tool_call = ToolCall(
-            id="call-123",
-            function_name="write_file",
-            arguments=json.dumps(
-                {"path": "index.html", "content": "<html></html>", "contentType": "text/html"}
-            ),
-        )
-
-        await tools._execute_tool(tool_call)
-
-        mock_client.write_file.assert_called_once_with(
+        mock_client_with_path.write_file.assert_called_once_with(
             path="index.html",
             content="<html></html>",
             content_type="text/html",
-            base_path="projects/website",
         )
 
     @pytest.mark.asyncio
-    async def test_execute_unknown_tool(self, tools):
-        """Should raise error for unknown tool"""
-        tool_call = ToolCall(
-            id="call-123", function_name="unknown_tool", arguments=json.dumps({"arg": "value"})
-        )
-
+    async def test_openai_execute_unknown_tool(self, tools):
+        """Should raise error for unknown tool via OpenAI provider"""
         with pytest.raises(ValueError) as exc:
-            await tools._execute_tool(tool_call)
+            await tools.openai._execute_tool("unknown_tool", {"arg": "value"})
 
         assert "Unknown tool: unknown_tool" in str(exc.value)
 
     @pytest.mark.asyncio
-    async def test_process_tool_calls_openai_response(self, tools, mock_client, sample_file_metadata):
-        """Should process OpenAI response with tool calls"""
+    async def test_openai_process_tool_calls_openai_response(self, tools, mock_client, sample_file_metadata):
+        """Should process OpenAI response with tool calls via OpenAI provider"""
         mock_client.write_file.return_value = sample_file_metadata
 
         # Mock OpenAI response structure
-        mock_response = {
-            "choices": [
-                {
-                    "message": {
-                        "tool_calls": [
-                            {
-                                "id": "call-123",
-                                "function": {
-                                    "name": "write_file",
-                                    "arguments": json.dumps({
-                                        "path": "test.txt",
-                                        "content": "Hello World",
-                                        "contentType": "text/plain",
-                                    }),
-                                },
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call-123"
+        mock_tool_call.function.name = "write_file"
+        mock_tool_call.function.arguments = json.dumps({
+            "path": "test.txt",
+            "content": "Hello World",
+            "contentType": "text/plain",
+        })
 
-        processed = await tools.process_tool_calls(mock_response)
+        mock_message = MagicMock()
+        mock_message.tool_calls = [mock_tool_call]
+
+        mock_choice = MagicMock()
+        mock_choice.message = mock_message
+
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+
+        processed = await tools.openai.process_tool_calls(mock_response)
 
         assert processed.handled is True
         assert len(processed.results) == 1
@@ -461,29 +449,25 @@ class TestOpenFilesTools:
         mock_client.write_file.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_process_tool_calls_with_error(self, tools, mock_client):
-        """Should handle tool execution errors"""
+    async def test_openai_process_tool_calls_with_error(self, tools, mock_client):
+        """Should handle tool execution errors via OpenAI provider"""
         mock_client.read_file.side_effect = Exception("File not found")
 
-        mock_response = {
-            "choices": [
-                {
-                    "message": {
-                        "tool_calls": [
-                            {
-                                "id": "call-456",
-                                "function": {
-                                    "name": "read_file",
-                                    "arguments": json.dumps({"path": "missing.txt", "version": 0}),
-                                },
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call-456"
+        mock_tool_call.function.name = "read_file"
+        mock_tool_call.function.arguments = json.dumps({"path": "missing.txt", "version": 0})
 
-        processed = await tools.process_tool_calls(mock_response)
+        mock_message = MagicMock()
+        mock_message.tool_calls = [mock_tool_call]
+
+        mock_choice = MagicMock()
+        mock_choice.message = mock_message
+
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+
+        processed = await tools.openai.process_tool_calls(mock_response)
 
         assert processed.handled is True
         assert len(processed.results) == 1
@@ -491,27 +475,23 @@ class TestOpenFilesTools:
         assert processed.results[0].error == "File not found"
 
     @pytest.mark.asyncio
-    async def test_process_tool_calls_ignores_non_openfiles_tools(self, tools, mock_client):
-        """Should ignore non-OpenFiles tools"""
-        mock_response = {
-            "choices": [
-                {
-                    "message": {
-                        "tool_calls": [
-                            {
-                                "id": "call-weather",
-                                "function": {
-                                    "name": "get_weather",
-                                    "arguments": json.dumps({"city": "New York"}),
-                                },
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
+    async def test_openai_process_tool_calls_ignores_non_openfiles_tools(self, tools, mock_client):
+        """Should ignore non-OpenFiles tools via OpenAI provider"""
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call-weather"
+        mock_tool_call.function.name = "get_weather"
+        mock_tool_call.function.arguments = json.dumps({"city": "New York"})
 
-        processed = await tools.process_tool_calls(mock_response)
+        mock_message = MagicMock()
+        mock_message.tool_calls = [mock_tool_call]
+
+        mock_choice = MagicMock()
+        mock_choice.message = mock_message
+
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+
+        processed = await tools.openai.process_tool_calls(mock_response)
 
         assert processed.handled is False
         assert len(processed.results) == 0
@@ -526,40 +506,34 @@ class TestOpenFilesTools:
         ])
 
     @pytest.mark.asyncio
-    async def test_process_tool_calls_mixed_tools(self, tools, mock_client, sample_file_metadata):
-        """Should process only OpenFiles tools in mixed response"""
+    async def test_openai_process_tool_calls_mixed_tools(self, tools, mock_client, sample_file_metadata):
+        """Should process only OpenFiles tools in mixed response via OpenAI provider"""
         mock_client.write_file.return_value = sample_file_metadata
 
-        mock_response = {
-            "choices": [
-                {
-                    "message": {
-                        "tool_calls": [
-                            {
-                                "id": "call-weather",
-                                "function": {
-                                    "name": "get_weather",
-                                    "arguments": json.dumps({"city": "New York"}),
-                                },
-                            },
-                            {
-                                "id": "call-write",
-                                "function": {
-                                    "name": "write_file",
-                                    "arguments": json.dumps({
-                                        "path": "test.txt",
-                                        "content": "Hello",
-                                        "contentType": "text/plain",
-                                    }),
-                                },
-                            },
-                        ]
-                    }
-                }
-            ]
-        }
+        mock_weather_call = MagicMock()
+        mock_weather_call.id = "call-weather"
+        mock_weather_call.function.name = "get_weather"
+        mock_weather_call.function.arguments = json.dumps({"city": "New York"})
 
-        processed = await tools.process_tool_calls(mock_response)
+        mock_write_call = MagicMock()
+        mock_write_call.id = "call-write"
+        mock_write_call.function.name = "write_file"
+        mock_write_call.function.arguments = json.dumps({
+            "path": "test.txt",
+            "content": "Hello",
+            "contentType": "text/plain",
+        })
+
+        mock_message = MagicMock()
+        mock_message.tool_calls = [mock_weather_call, mock_write_call]
+
+        mock_choice = MagicMock()
+        mock_choice.message = mock_message
+
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+
+        processed = await tools.openai.process_tool_calls(mock_response)
 
         assert processed.handled is True
         assert len(processed.results) == 1  # Only OpenFiles tool processed
@@ -567,19 +541,20 @@ class TestOpenFilesTools:
         assert processed.results[0].function == "write_file"
 
     @pytest.mark.asyncio
-    async def test_process_tool_calls_empty_response(self, tools):
-        """Should handle empty response gracefully"""
-        mock_response = {"choices": []}
+    async def test_openai_process_tool_calls_empty_response(self, tools):
+        """Should handle empty response gracefully via OpenAI provider"""
+        mock_response = MagicMock()
+        mock_response.choices = []
 
-        processed = await tools.process_tool_calls(mock_response)
+        processed = await tools.openai.process_tool_calls(mock_response)
 
         assert processed.handled is False
         assert len(processed.results) == 0
         assert len(processed.tool_messages) == 0
 
     @pytest.mark.asyncio
-    async def test_process_tool_calls_object_style_response(self, tools, mock_client, sample_file_metadata):
-        """Should handle object-style response (like from OpenAI SDK)"""
+    async def test_openai_process_tool_calls_object_style_response(self, tools, mock_client, sample_file_metadata):
+        """Should handle object-style response (like from OpenAI SDK) via OpenAI provider"""
         mock_client.write_file.return_value = sample_file_metadata
 
         # Mock object with attributes (like OpenAI SDK response)
@@ -601,7 +576,7 @@ class TestOpenFilesTools:
         mock_response = MagicMock()
         mock_response.choices = [mock_choice]
 
-        processed = await tools.process_tool_calls(mock_response)
+        processed = await tools.openai.process_tool_calls(mock_response)
 
         assert processed.handled is True
         assert len(processed.results) == 1

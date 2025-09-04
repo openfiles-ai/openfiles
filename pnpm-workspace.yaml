@@ -1,3 +1,5 @@
 packages:
   - "sdks/*"
+  - "examples/typescript/*"
+  - "examples/python/*"
   # Examples now use published packages, not workspace dependencies

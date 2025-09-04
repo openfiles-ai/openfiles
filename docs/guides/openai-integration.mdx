@@ -18,28 +18,7 @@ description: 'The easiest way to add file operations to your OpenAI applications
 
 ## Installation
 
-<Tabs>
-  <Tab title="npm">
-    ```bash
-    npm install @openfiles-ai/sdk
-    ```
-  </Tab>
-  <Tab title="yarn">
-    ```bash
-    yarn add @openfiles-ai/sdk
-    ```
-  </Tab>
-  <Tab title="pnpm">
-    ```bash
-    pnpm add @openfiles-ai/sdk
-    ```
-  </Tab>
-  <Tab title="pip">
-    ```bash
-    pip install openfiles-ai
-    ```
-  </Tab>
-</Tabs>
+Refer to the [SDK Overview](/guides/overview#import-paths) for installation instructions.
 
 ## Two Simple Changes
 
@@ -172,11 +151,24 @@ ai = OpenAI(
 
 ## Compatibility
 
+- ✅ Chat completions (text-based conversations)
 - ✅ All OpenAI chat models (GPT-3.5, GPT-4, etc.)
-- ✅ Streaming responses
-- ✅ Function calling
-- ✅ All other OpenAI features
+- ✅ Function calling and tool use
+- 🔜 Streaming responses (coming soon)
+- 🔜 Image inputs and vision models (coming soon)
 - 🔜 Assistants API (coming soon)
+
+## When to Use OpenAI Integration
+
+**Choose OpenAI Integration when:**
+- You're already using the OpenAI SDK
+- You want the simplest possible setup
+- You need automatic file operations with zero configuration
+- You prefer a drop-in replacement approach
+
+**Consider alternatives:**
+- **[Tools Integration](/guides/tools-integration)** - If you're using multiple AI providers or want more control
+- **[Core Client](/guides/core-client)** - If you need direct API access without AI dependencies
 
 ## Next Steps
 
@@ -185,6 +177,6 @@ ai = OpenAI(
     See real OpenAI integration examples
   </Card>
   <Card title="Tools Integration" icon="wrench" href="/guides/tools-integration">
-    Use OpenFiles with Claude, Gemini, and other AI providers
+    Use OpenFiles with Claude, Anthropic, and other AI providers
   </Card>
 </CardGroup>

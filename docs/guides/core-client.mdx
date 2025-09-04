@@ -20,28 +20,7 @@ description: 'Direct access to the OpenFiles API with complete control over file
 
 ## Installation
 
-<Tabs>
-  <Tab title="npm">
-    ```bash
-    npm install @openfiles-ai/sdk
-    ```
-  </Tab>
-  <Tab title="yarn">
-    ```bash
-    yarn add @openfiles-ai/sdk
-    ```
-  </Tab>
-  <Tab title="pnpm">
-    ```bash
-    pnpm add @openfiles-ai/sdk
-    ```
-  </Tab>
-  <Tab title="pip">
-    ```bash
-    pip install openfiles-ai
-    ```
-  </Tab>
-</Tabs>
+Refer to the [SDK Overview](/guides/overview#import-paths) for installation instructions and import paths.
 
 ## Basic Usage
 
@@ -507,6 +486,18 @@ class BackupManager {
   }
 }
 ```
+
+## When to Use Core Client
+
+**Choose Core Client when you need:**
+- Direct API control without AI abstractions
+- Custom file operation workflows
+- Integration with non-AI systems
+- Building your own tools and abstractions
+
+**Consider alternatives:**
+- **[OpenAI Integration](/guides/openai-integration)** - If you're using OpenAI and want automatic file operations
+- **[Tools Integration](/guides/tools-integration)** - If you're using any AI provider and want framework-agnostic tools
 
 ## Next Steps
 

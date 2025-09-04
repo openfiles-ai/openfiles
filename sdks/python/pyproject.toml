@@ -1,6 +1,6 @@
 [project]
 name = "openfiles-ai"
-version = "0.1.5"
+version = "0.1.8"
 description = "OpenFiles SDK - AI-native file storage for your AI agents"
 authors = [{name = "OpenFiles AI"}]
 readme = "README.md"

@@ -75,9 +75,9 @@ OPENAI_API_KEY=sk_your_openai_key_here
 
 | Module | Import Path | Best For | Example |
 |--------|-------------|----------|---------|
-| **Core** | `@openfiles/sdk/core` | High-performance, direct control | Document Manager |
-| **Tools** | `@openfiles/sdk/tools` | Custom AI frameworks | Document Manager |
-| **OpenAI** | `@openfiles/sdk/openai` | AI applications, drop-in replacement | Chat App + Document Manager |
+| **Core** | `@openfiles-ai/sdk/core` | High-performance, direct control | Document Manager |
+| **Tools** | `@openfiles-ai/sdk/tools` | Custom AI frameworks | Document Manager |
+| **OpenAI** | `@openfiles-ai/sdk/openai` | AI applications, drop-in replacement | Chat App + Document Manager |
 
 ## Key Features Covered
 

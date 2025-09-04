@@ -15,6 +15,8 @@ from typing import Any, Dict
 
 from dotenv import load_dotenv
 
+# Load environment variables first, before importing OpenFiles modules
+load_dotenv()
 from openfiles_ai import OpenFilesClient
 from shared.sample_data import (
     application_logs,
@@ -316,7 +318,6 @@ async def create_logger(client: OpenFilesClient, app_name: str, session_id: str 
 
 def main() -> None:
     """Run the example if called directly"""
-    load_dotenv()
     asyncio.run(core_integration_example())
 
 

@@ -14,6 +14,9 @@ import time
 from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
+
+# Load environment variables first, before importing OpenFiles modules
+load_dotenv()
 from openai import OpenAI as OpenAIClient
 
 from openfiles_ai import OpenFilesClient, OpenFilesTools
@@ -42,10 +45,8 @@ async def tools_integration_example() -> None:
         base_path=session_paths['tools_test']  # All AI-generated files organized under session
     )
 
-    # Create scoped tools for different departments with session isolation
-    sales_tools = OpenFilesTools(client.with_base_path('sales-dept'))
-    data_tools = OpenFilesTools(client.with_base_path('data-analytics'))
-    tools = OpenFilesTools(client)  # Main tools for general use
+    # Create single unified tool for consistent basePath context
+    project_tools = OpenFilesTools(client)  # Single tool for entire conversation
     
     start_time = time.time()
     operations_completed = 0
@@ -56,7 +57,7 @@ async def tools_integration_example() -> None:
     model = 'gpt-4o-mini'
 
     print(f'🔧 Mode: {"AI-powered" if use_ai else "Manual execution"}')
-    print(f'🛠️  Available tools: {len(tools.definitions)}')
+    print(f'🛠️  Available tools: {len(project_tools.openai.definitions)}')
 
     try:
         if openai:
@@ -72,19 +73,19 @@ async def tools_integration_example() -> None:
             print('💬 User: "Create a sales report for January 2024 with our key metrics"')
             conversation.append({
                 'role': 'user',
-                'content': 'Create a sales report for January 2024. Include revenue of $125,000, 42 new customers, top regions (North America, Europe), and next month goals. Save it as january-2024-sales.md'
+                'content': 'Create a sales report for January 2024. Include revenue of $125,000, 42 new customers, top regions (North America, Europe), and next month goals. Save it in the sales department folder as january-2024-sales.md'
             })
 
             report_response = openai.chat.completions.create(
                 model=model,
                 messages=conversation,
-                tools=[tool.to_dict() for tool in sales_tools.definitions],  # Using sales department tools
+                tools=[tool.to_dict() for tool in project_tools.openai.definitions],  # Using unified project tools
                 temperature=0.3,
                 parallel_tool_calls=False  # Ensure sequential execution
             )
 
             # Process tools and get tool messages
-            report_processed = await sales_tools.process_tool_calls(report_response)
+            report_processed = await project_tools.openai.process_tool_calls(report_response)
             
             if report_processed.handled:
                 print('✅ Sales report created at ai-workspace/sales-dept/january-2024-sales.md')
@@ -105,12 +106,12 @@ async def tools_integration_example() -> None:
             list_response = openai.chat.completions.create(
                 model=model,
                 messages=conversation,
-                tools=[tool.to_dict() for tool in tools.definitions],
+                tools=[tool.to_dict() for tool in project_tools.openai.definitions],
                 temperature=0.1,
                 parallel_tool_calls=False
             )
 
-            list_processed = await tools.process_tool_calls(list_response)
+            list_processed = await project_tools.openai.process_tool_calls(list_response)
             if list_processed.handled:
                 print('✅ File listing completed')
                 operations_completed += 1
@@ -124,18 +125,18 @@ async def tools_integration_example() -> None:
             print('💬 User: "Read the sales report and add a customer satisfaction section"')
             conversation.append({
                 'role': 'user',
-                'content': 'Read the file sales-dept/january-2024-sales.md (the exact file we just created) and add a new section called "Customer Satisfaction" with a score of 4.7/5 and key feedback points.'
+                'content': 'Read the sales report file we just created and add a new section called "Customer Satisfaction" with a score of 4.7/5 and key feedback points.'
             })
 
             read_edit_response = openai.chat.completions.create(
                 model=model,
                 messages=conversation,
-                tools=[tool.to_dict() for tool in tools.definitions],
+                tools=[tool.to_dict() for tool in project_tools.openai.definitions],
                 temperature=0.2,
                 parallel_tool_calls=False
             )
 
-            read_edit_processed = await tools.process_tool_calls(read_edit_response)
+            read_edit_processed = await project_tools.openai.process_tool_calls(read_edit_response)
             if read_edit_processed.handled:
                 print('✅ Report updated with satisfaction data')
                 operations_completed += 1
@@ -149,18 +150,18 @@ async def tools_integration_example() -> None:
             print('💬 User: "Create a customer database with sample data"')
             conversation.append({
                 'role': 'user',
-                'content': 'Create a customer database CSV file with these columns: customer_id, company_name, industry, monthly_revenue, status. Add 8 sample customers with realistic business data. Save as customers.csv'
+                'content': 'Create a customer database CSV file with these columns: customer_id, company_name, industry, monthly_revenue, status. Add 8 sample customers with realistic business data. Save it in the data folder as customers.csv'
             })
 
             customer_response = openai.chat.completions.create(
                 model=model,
                 messages=conversation,
-                tools=[tool.to_dict() for tool in data_tools.definitions],  # Using data analytics tools
+                tools=[tool.to_dict() for tool in project_tools.openai.definitions],  # Using unified project tools
                 temperature=0.3,
                 parallel_tool_calls=False
             )
 
-            customer_processed = await data_tools.process_tool_calls(customer_response)
+            customer_processed = await project_tools.openai.process_tool_calls(customer_response)
             if customer_processed.handled:
                 print('✅ Customer database created at ai-workspace/data-analytics/customers.csv')
                 operations_completed += 1
@@ -174,18 +175,18 @@ async def tools_integration_example() -> None:
             print('💬 User: "Check the details of our sales report file"')
             conversation.append({
                 'role': 'user',
-                'content': 'Get the file information for sales-dept/january-2024-sales.md (the sales report file we created) - I want to see the version, size, and modification details.'
+                'content': 'Get the file information for the sales report file we created - I want to see the version, size, and modification details.'
             })
 
             metadata_response = openai.chat.completions.create(
                 model=model,
                 messages=conversation,
-                tools=[tool.to_dict() for tool in tools.definitions],
+                tools=[tool.to_dict() for tool in project_tools.openai.definitions],
                 temperature=0.1,
                 parallel_tool_calls=False
             )
 
-            metadata_processed = await tools.process_tool_calls(metadata_response)
+            metadata_processed = await project_tools.openai.process_tool_calls(metadata_response)
             if metadata_processed.handled:
                 print('✅ File metadata retrieved')
                 operations_completed += 1
@@ -299,7 +300,7 @@ Based on our customer database analysis, we found {customer_lines if read_respon
         print('✅ Tools Integration Complete')
         print(f'📊 Operations completed: {operations_completed}')
         print(f'⏱️  Duration: {duration:.0f}ms')
-        print(f'🛠️  Tools available: {len(tools.definitions)}')
+        print(f'🛠️  Tools available: {len(project_tools.openai.definitions)}')
         integration_mode = 'AI-powered function calling' if use_ai else 'Direct tool execution'
         print(f'🤖 Integration mode: {integration_mode}')
         
@@ -317,48 +318,47 @@ Based on our customer database analysis, we found {customer_lines if read_respon
 
 # Integration patterns for custom AI frameworks:
 
-async def create_department_ai(
+async def create_scoped_conversation(
     openai: OpenAIClient,
     client: OpenFilesClient,
-    department: str,
+    scope: str = None,
     session_id: str = None
 ) -> Dict[str, Any]:
     """
-    Pattern: AI Function Calling with Department-Based Organization
+    Pattern: AI Function Calling with Scoped Organization
     """
     # Generate session ID if not provided for test isolation
     if not session_id:
         session_id = generate_session_id()
     
-    # Create department-specific tools with session isolation
-    dept_client = client.with_base_path(f'session_{session_id}/departments/{department}')
-    dept_tools = OpenFilesTools(dept_client)
+    # Create unified tools for the conversation scope
+    scoped_client = client.with_base_path(scope) if scope else client
+    conversation_tools = OpenFilesTools(scoped_client)
     
     async def process(prompt: str) -> Dict[str, Any]:
         response = openai.chat.completions.create(
             model='gpt-4o-mini',
             messages=[{'role': 'user', 'content': prompt}],
-            tools=[tool.to_dict() for tool in dept_tools.definitions],
+            tools=[tool.to_dict() for tool in conversation_tools.openai.definitions],
             temperature=0.3
         )
         
-        result = await dept_tools.process_tool_calls(response)
+        result = await conversation_tools.openai.process_tool_calls(response)
         return {
             **result.__dict__,
-            'department': department,
-            'base_path': f'session_{session_id}/departments/{department}'
+            'scope': scope,
+            'session_id': session_id
         }
     
     return {
         'process': process,
-        'tools': dept_tools,
-        'client': dept_client
+        'tools': conversation_tools,
+        'client': scoped_client
     }
 
 
 def main() -> None:
     """Run the example if called directly"""
-    load_dotenv()
     asyncio.run(tools_integration_example())
 
 

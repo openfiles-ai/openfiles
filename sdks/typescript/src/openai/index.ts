@@ -1,5 +1,5 @@
 /**
- * @openfiles/sdk/openai
+ * @openfiles-ai/sdk/openai
  * 
  * Drop-in replacement for OpenAI client with automatic file operations
  */
